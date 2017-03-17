@@ -17,7 +17,7 @@ resolvers += "jitpack" at "https://jitpack.io"
 libraryDependencies ++=
   Seq(
     "javax.servlet" % "javax.servlet-api" % "3.1.0",
-    "com.github.springernature" % "samatra" % "v1.0",
+    "com.github.springernature" % "samatra" % "v1.1",
 
     "org.eclipse.jetty" % "jetty-webapp" % jettyVersion,
     "org.eclipse.jetty" % "jetty-server" % jettyVersion,

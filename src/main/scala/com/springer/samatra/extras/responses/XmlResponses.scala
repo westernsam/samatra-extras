@@ -2,7 +2,7 @@ package com.springer.samatra.extras.responses
 
 import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 
-import com.springer.link.samatra.routing.Routings.HttpResp
+import com.springer.samatra.routing.Routings.HttpResp
 
 import scala.language.implicitConversions
 import scala.xml.Elem

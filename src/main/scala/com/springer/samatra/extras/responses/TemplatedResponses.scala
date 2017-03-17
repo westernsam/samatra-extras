@@ -8,8 +8,8 @@ import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 
 import com.samskivert.mustache.Mustache.{Compiler, Lambda}
 import com.samskivert.mustache.{Mustache, Template}
-import com.springer.link.samatra.routing.Routings.HttpResp
-import com.springer.link.samatra.routing.StandardResponses.{Halt, Html}
+import com.springer.samatra.routing.Routings.HttpResp
+import com.springer.samatra.routing.StandardResponses.{Halt, Html}
 import com.springer.samatra.extras.PrintStackTrace
 
 import scala.collection.JavaConverters._

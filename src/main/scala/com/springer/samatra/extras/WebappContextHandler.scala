@@ -6,8 +6,8 @@ import java.util
 import javassist.{ClassPool, CtClass}
 import javax.servlet.{DispatcherType, Filter}
 
-import com.springer.link.samatra.routing.Routings.{AggregateRoutes, HttpResp, PathParamsRoute, RegexRoute, Route, Routes}
-import com.springer.link.samatra.routing.{Request, Routings}
+import com.springer.samatra.routing.Routings.{AggregateRoutes, HttpResp, PathParamsRoute, RegexRoute, Route, Routes}
+import com.springer.samatra.routing.{Request, Routings}
 import org.eclipse.jetty.servlet.{FilterHolder, ServletContextHandler, ServletHolder}
 
 import scala.collection.mutable

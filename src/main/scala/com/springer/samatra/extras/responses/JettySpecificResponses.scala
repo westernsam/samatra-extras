@@ -3,7 +3,7 @@ package com.springer.samatra.extras.responses
 import java.nio.ByteBuffer
 import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 
-import com.springer.link.samatra.routing.Routings.HttpResp
+import com.springer.samatra.routing.Routings.HttpResp
 import org.eclipse.jetty.server.HttpOutput
 
 import scala.language.implicitConversions

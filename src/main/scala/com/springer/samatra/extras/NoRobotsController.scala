@@ -1,7 +1,7 @@
 package com.springer.samatra.extras
 
-import com.springer.link.samatra.routing.Routings.Controller
-import com.springer.link.samatra.routing.StandardResponses.Implicits._
+import com.springer.samatra.routing.Routings.Controller
+import com.springer.samatra.routing.StandardResponses.Implicits._
 
 class NoRobotsController(host: String) extends Controller {
 

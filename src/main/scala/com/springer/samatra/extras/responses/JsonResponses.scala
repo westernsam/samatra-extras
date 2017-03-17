@@ -3,7 +3,7 @@ package com.springer.samatra.extras.responses
 import java.io.{OutputStream, OutputStreamWriter, StringWriter, Writer}
 import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 
-import com.springer.link.samatra.routing.Routings.HttpResp
+import com.springer.samatra.routing.Routings.HttpResp
 import com.springer.samatra.extras.responses.JsonSerialization.{JsonSerilizer, NonRecursiveJsonSerializer}
 
 import scala.collection.immutable.{List, Nil}
