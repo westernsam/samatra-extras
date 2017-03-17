@@ -1,4 +1,4 @@
-samatra-extra
+samatra-extra [![Build Status](https://travis-ci.org/springernature/samatra-extras.svg?branch=master)](https://travis-ci.org/springernature/samatra-extras)
 ------------
 
 Samatra with batteries included. 
