@@ -1,0 +1,4 @@
+cf-username: bigbird@groups.springer.com
+ci-server-host: te-prod-go-02.springer-sbm.com
+go-pipeline-group: SpringerLink
+language: scala
