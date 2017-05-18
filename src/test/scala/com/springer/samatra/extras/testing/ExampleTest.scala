@@ -10,10 +10,11 @@ import com.springer.samatra.routing.StandardResponses.{AddCookie, StringResp, Wi
 import org.scalatest.FunSpec
 import org.scalatest.Matchers._
 import org.scalatest.concurrent.ScalaFutures
+import SamatraControllerTestHelpers.get
 
 import scala.concurrent.Future
 
-class ExampleTest extends FunSpec with SamatraControllerTest with ScalaFutures {
+class ExampleTest extends FunSpec with ScalaFutures {
 
   implicit val fakeTemplates : TemplateRenderer = new TemplateRenderer {
     override def rendered(viewName: String, model: Map[String, Any]): Either[ViewRenderingError, String] = Right(viewName)

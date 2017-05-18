@@ -14,7 +14,7 @@ import com.springer.samatra.routing.Routings.{HttpResp, PathParamsRoute, RegexRo
 import scala.concurrent.Future
 import scala.language.implicitConversions
 
-trait SamatraControllerTest {
+object SamatraControllerTestHelpers {
 
   def httpServletRequest(path: String, method: String): HttpServletRequest = new HttpServletRequest {
     override def getPathInfo: String = ???
