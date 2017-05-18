@@ -13,15 +13,16 @@ object JsonResponses {
 
   case class JsonResponse(body: Map[String, Any])
 
-  private val serializer: JsonSerilizer = new NonRecursiveJsonSerializer()
-
-  implicit def fromJsonResponse(json: JsonResponse): HttpResp = new HttpResp {
+  case class JsonHttpResp(json: JsonResponse) extends HttpResp {
+    private val serializer: JsonSerilizer = new NonRecursiveJsonSerializer()
     override def process(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
       resp.setContentType("application/json")
       resp.setStatus(200)
       try serializer.toJson(json.body, resp.getOutputStream) finally resp.getOutputStream.flush()
     }
   }
+
+  implicit def fromJsonResponse(json: JsonResponse): HttpResp = JsonHttpResp(json)
 }
 
 object JsonSerialization {
