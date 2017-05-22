@@ -26,20 +26,20 @@ object SamatraControllerTestHelpers {
   val dateFormat: SimpleDateFormat = new SimpleDateFormat("EEE, dd MM yyyy hh:mm:ss 'GMT'")
 
   implicit class SamatraHttpRespHelpers(resp: HttpResp) {
-    val committed = new AtomicBoolean(false)
-    val bytes = new ByteArrayOutputStream()
-    val writer = new PrintWriter(new OutputStreamWriter(bytes))
-    val stream = new ServletOutputStream {
+    private val committed = new AtomicBoolean(false)
+    private val bytes = new ByteArrayOutputStream()
+    private val writer = new PrintWriter(new OutputStreamWriter(bytes))
+    private val stream = new ServletOutputStream {
       override def isReady: Boolean = true
       override def setWriteListener(writeListener: WriteListener): Unit = throw new UnsupportedOperationException
       override def write(b: Int): Unit = bytes.write(b)
     }
 
-    val status = new AtomicInteger(200)
-    val respHeaders = new ConcurrentHashMap[String, CopyOnWriteArrayList[String]]()
-    val respCookies = new CopyOnWriteArrayList[Cookie]()
-    val characterEncoding = new AtomicReference[String]("UTF-8")
-    val contentType = new AtomicReference[String]()
+    private val status = new AtomicInteger(200)
+    private val respHeaders = new ConcurrentHashMap[String, CopyOnWriteArrayList[String]]()
+    private val respCookies = new CopyOnWriteArrayList[Cookie]()
+    private val characterEncoding = new AtomicReference[String]("UTF-8")
+    private val contentType = new AtomicReference[String]()
 
     resp.process(null, new HttpServletResponse {
       override def sendError(sc: Int, msg: String): Unit = {
