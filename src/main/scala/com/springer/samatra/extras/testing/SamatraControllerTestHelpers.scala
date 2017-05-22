@@ -129,10 +129,10 @@ object SamatraControllerTestHelpers {
     def headers: Map[String, Seq[String]] = {
       val contentTypeHeaders = {
         (Option(contentType.get), Option(characterEncoding.get())) match {
-          case (Some(t), Some(e)) => List(t, e)
-          case (Some(t), None) => List(t)
-          case (None, Some(e)) => List(e)
-          case (None, None) => List()
+          case (Some(t), Some(e)) => Seq(t, e)
+          case (Some(t), None) => Seq(t)
+          case (None, Some(e)) => Seq(e)
+          case (None, None) => Seq()
         }
       }
       val hds = respHeaders.asScala.mapValues(_.asScala.toSeq).toMap
