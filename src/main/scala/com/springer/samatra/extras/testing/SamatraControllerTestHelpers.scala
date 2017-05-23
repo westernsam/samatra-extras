@@ -2,7 +2,7 @@ package com.springer.samatra.extras.testing
 
 import java.io._
 import java.net.URLDecoder.decode
-import java.net.{URLDecoder, URLEncoder}
+import java.net.URLEncoder
 import java.security.Principal
 import java.text.SimpleDateFormat
 import java.util
