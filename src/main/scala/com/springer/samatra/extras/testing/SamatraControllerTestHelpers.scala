@@ -1,7 +1,8 @@
 package com.springer.samatra.extras.testing
 
 import java.io._
-import java.net.URLEncoder
+import java.net.URLDecoder.decode
+import java.net.{URLDecoder, URLEncoder}
 import java.security.Principal
 import java.text.SimpleDateFormat
 import java.util
@@ -139,10 +140,10 @@ object SamatraControllerTestHelpers {
     def cookies: Seq[Cookie] = respCookies.asScala
   }
 
-  def httpServletRequest(path: String, method: String, headers: Map[String, Seq[String]], body: Option[Array[Byte]]): HttpServletRequest = {
+  def httpServletRequest(path: String, method: String, headers: Map[String, Seq[String]], body: Option[Array[Byte]], cookies: Seq[Cookie]): HttpServletRequest = {
     val committed = new AtomicBoolean(false)
 
-    val bytes =  body match {
+    val bytes = body match {
       case Some(b) => new ByteArrayInputStream(body.get)
       case None => new ByteArrayInputStream(new Array[Byte](0))
     }
@@ -212,18 +213,29 @@ object SamatraControllerTestHelpers {
 
       override def setAttribute(name: String, o: AnyRef): Unit = attributes.put(name, o)
       override def getAttribute(name: String): AnyRef = attributes.get(name)
-      override def getAttributeNames: util.Enumeration[String] =  Collections.enumeration(attributes.keySet())
+      override def getAttributeNames: util.Enumeration[String] = Collections.enumeration(attributes.keySet())
       override def removeAttribute(name: String): Unit = attributes.remove(name)
 
-      override def getCookies: Array[Cookie] = ???
+      override def getCookies: Array[Cookie] = cookies.toArray
 
-      override def getParameterValues(name: String): Array[String] = ???
-      override def getParameterNames: util.Enumeration[String] = ???
-      override def getParameterMap: util.Map[String, Array[String]] = ???
-      override def getParameter(name: String): String = ???
+      override def getParameterValues(name: String): Array[String] = getParameterMap.values().asScala.map(_.head).toArray
+      override def getParameterNames: util.Enumeration[String] = Collections.enumeration(getParameterMap.keySet())
+      override def getParameter(name: String): String = Option(getParameterMap.get(name)).map(_.head).orNull
+
+      override def getParameterMap: util.Map[String, Array[String]] = {
+        def parse(qs: String): Map[String, Array[String]] = {
+          val tuples: Array[(String, String)] = for {
+            p <- qs.split("&")
+            keyAndValue = p.split("=", 2)
+          } yield decode(keyAndValue(0), "UTF-8") -> decode(keyAndValue(1), "UTF-8")
+
+          tuples.groupBy { case (k, _) => k }.mapValues(_.map(_._2))
+        }
+
+        uri.queryString.map(parse).getOrElse(Map.empty).asJava //todo params from body
+      }
       override def getParts: util.Collection[Part] = ???
       override def getPart(name: String): Part = ???
-
 
       override def getContentLength: Int = body.map(_.length).getOrElse(0)
       override def getContentLengthLong: Long = bytes.available()
@@ -246,11 +258,11 @@ object SamatraControllerTestHelpers {
     }
   }
 
-  def get(r: Routes)(path: String, headers: Map[String, Seq[String]] = Map.empty): Future[HttpResp] = runRequest(r, httpServletRequest(path, "GET", headers, None))
-  def head(r: Routes)(path: String, headers: Map[String, Seq[String]] = Map.empty): Future[HttpResp] = runRequest(r, httpServletRequest(path, "HEAD", headers, None))
-  def post(r: Routes)(path: String, headers: Map[String, Seq[String]] = Map.empty, body: Array[Byte]): Future[HttpResp] = runRequest(r, httpServletRequest(path, "POST", headers, Some(body)))
-  def put(r: Routes)(path: String, headers: Map[String, Seq[String]] = Map.empty, body: Array[Byte]): Future[HttpResp] = runRequest(r, httpServletRequest(path, "PUT", headers, Some(body)))
-  def delete(r: Routes)(path: String, headers: Map[String, Seq[String]] = Map.empty): Future[HttpResp] = runRequest(r, httpServletRequest(path, "DELETE", headers, None))
+  def get(r: Routes)(path: String, headers: Map[String, Seq[String]] = Map.empty, cookies: Seq[Cookie] = Seq.empty): Future[HttpResp] = runRequest(r, httpServletRequest(path, "GET", headers, None, cookies))
+  def head(r: Routes)(path: String, headers: Map[String, Seq[String]] = Map.empty, cookies: Seq[Cookie] = Seq.empty): Future[HttpResp] = runRequest(r, httpServletRequest(path, "HEAD", headers, None, cookies))
+  def post(r: Routes)(path: String, headers: Map[String, Seq[String]] = Map.empty, body: Array[Byte], cookies: Seq[Cookie] = Seq.empty): Future[HttpResp] = runRequest(r, httpServletRequest(path, "POST", headers, Some(body), cookies))
+  def put(r: Routes)(path: String, headers: Map[String, Seq[String]] = Map.empty, body: Array[Byte], cookies: Seq[Cookie] = Seq.empty): Future[HttpResp] = runRequest(r, httpServletRequest(path, "PUT", headers, Some(body), cookies))
+  def delete(r: Routes)(path: String, headers: Map[String, Seq[String]] = Map.empty, cookies: Seq[Cookie] = Seq.empty): Future[HttpResp] = runRequest(r, httpServletRequest(path, "DELETE", headers, None, cookies))
 
   def futureFrom(resp: HttpResp): Future[HttpResp] = resp match {
     case FutureHttpResp(fut, _, _, _, _) => fut.asInstanceOf[Future[HttpResp]]
