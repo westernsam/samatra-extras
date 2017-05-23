@@ -43,7 +43,7 @@ class ExampleTest extends FunSpec with ScalaFutures {
       <hi>{req.captured("foo")}</hi>
     }
 
-    get("/req-response") { req =>
+    get("/request-response") { req =>
       (req:HttpServletRequest, resp:HttpServletResponse) => {
         resp.setDateHeader("Date", LocalDate.of(2017, 5, 18).atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli)
         resp.setStatus(200)
@@ -75,7 +75,7 @@ class ExampleTest extends FunSpec with ScalaFutures {
     }
 
     it("should test with helper methods") {
-      whenReady(get(controllerUnderTest)("/req-response")) { result =>
+      whenReady(get(controllerUnderTest)("/request-response")) { result =>
         result.statusCode shouldBe 200
         result.headers.get("Date") shouldBe Some(List("Thu, 18 05 2017 01:00:00 GMT"))
         result.outputAsString shouldBe "sam"

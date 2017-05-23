@@ -5,14 +5,13 @@ import java.net.URLEncoder
 import java.security.Principal
 import java.text.SimpleDateFormat
 import java.util
-import java.util.{Calendar, Locale, TimeZone}
-import java.util.concurrent.{ConcurrentHashMap, CopyOnWriteArrayList}
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger, AtomicReference}
-import java.util.function.Function
+import java.util.concurrent.{ConcurrentHashMap, CopyOnWriteArrayList}
+import java.util.{Calendar, Collections, Locale, TimeZone}
 import javax.servlet._
 import javax.servlet.http._
 
-import com.samskivert.mustache.Template
+import com.springer.samatra.extras.http.URI
 import com.springer.samatra.routing.FutureResponses.FutureHttpResp
 import com.springer.samatra.routing.Request
 import com.springer.samatra.routing.Routings._
@@ -52,9 +51,7 @@ object SamatraControllerTestHelpers {
       override def addCookie(cookie: Cookie): Unit = respCookies.add(cookie)
 
       override def getHeader(name: String): String = respHeaders.get(name).asScala.head
-
       override def setHeader(name: String, value: String): Unit = respHeaders.computeIfAbsent(name, _ => new CopyOnWriteArrayList[String]()).add(value)
-
 
       override def setIntHeader(name: String, value: Int): Unit = setHeader(name, value.toString)
       override def addDateHeader(name: String, date: Long): Unit = addHeader(name, formatDate(date))
@@ -142,105 +139,110 @@ object SamatraControllerTestHelpers {
     def cookies: Seq[Cookie] = respCookies.asScala
   }
 
-  /*
-    *
-    *
-    *
-      getParameter
-      getParameterMap
-
-      getAttribute
-      setAttribute
-      removeAttribute
-
-      getQueryString
-      getRequestURL
-
-      getCookies
-  [x] getInputStream
-    * */
   def httpServletRequest(path: String, method: String, headers: Map[String, Seq[String]], body: Option[Array[Byte]]): HttpServletRequest = {
+    val committed = new AtomicBoolean(false)
+
     val bytes =  body match {
       case Some(b) => new ByteArrayInputStream(body.get)
       case None => new ByteArrayInputStream(new Array[Byte](0))
     }
+    val uri = URI.parse(path)
+    val attributes = new ConcurrentHashMap[String, AnyRef]()
 
     new HttpServletRequest {
 
-      override def getPathInfo: String = ???
-      override def getUserPrincipal: Principal = ???
+      override def getPathInfo: String = path
+      override def getUserPrincipal: Principal = null
       override def getServletPath: String = ""
-      override def getDateHeader(name: String): Long = ???
-      override def getIntHeader(name: String): Int = ???
+      override def getDateHeader(name: String): Long = if (headers.contains(name)) dateFormat.parse(getHeader(name)).getTime else -1
+      override def getIntHeader(name: String): Int = if (headers.contains(name)) getHeader(name).toInt else -1
       override def getMethod: String = method
       override def getContextPath: String = "/"
-      override def isRequestedSessionIdFromUrl: Boolean = ???
-      override def getPathTranslated: String = ???
+      override def isRequestedSessionIdFromUrl: Boolean = false
+      override def getPathTranslated: String = path
       override def getRequestedSessionId: String = ""
-      override def isRequestedSessionIdFromURL: Boolean = ???
+      override def isRequestedSessionIdFromURL: Boolean = false
       override def logout(): Unit = ()
-      override def changeSessionId(): String = ???
-      override def getRequestURL: StringBuffer = new StringBuffer(path)
-      override def upgrade[T <: HttpUpgradeHandler](handlerClass: Class[T]): T = ???
+      override def changeSessionId(): String = ""
+      override def getRequestURL: StringBuffer = new StringBuffer(uri.format)
+      override def upgrade[T <: HttpUpgradeHandler](handlerClass: Class[T]): T = throw new UnsupportedOperationException
       override def getRequestURI: String = path
-      override def isRequestedSessionIdValid: Boolean = ???
-      override def getAuthType: String = ???
-      override def authenticate(response: HttpServletResponse): Boolean = ???
-      override def login(username: String, password: String): Unit = ???
-      override def getHeader(name: String): String = ???
-      override def getCookies: Array[Cookie] = ???
-      override def getParts: util.Collection[Part] = ???
-      override def getHeaders(name: String): util.Enumeration[String] = ???
-      override def getQueryString: String = ???
-      override def getPart(name: String): Part = ???
-      override def isUserInRole(role: String): Boolean = ???
-      override def getRemoteUser: String = ???
-      override def getHeaderNames: util.Enumeration[String] = ???
-      override def isRequestedSessionIdFromCookie: Boolean = ???
-      override def getSession(create: Boolean): HttpSession = ???
-      override def getSession: HttpSession = ???
-      override def getRemoteAddr: String = ???
-      override def getParameterMap: util.Map[String, Array[String]] = ???
-      override def getServerName: String = ???
-      override def getRemotePort: Int = ???
-      override def getParameter(name: String): String = ???
-      override def getRequestDispatcher(path: String): RequestDispatcher = ???
-      override def getAsyncContext: AsyncContext = ???
-      override def isAsyncSupported: Boolean = ???
-      override def getContentLength: Int = ???
-      override def getInputStream: ServletInputStream = new ServletInputStream {
-        override def isReady: Boolean = true
-        override def isFinished: Boolean = bytes.available() > -1
-        override def setReadListener(readListener: ReadListener): Unit = ()
-        override def read(): Int = bytes.read()
+      override def isRequestedSessionIdValid: Boolean = true
+      override def getAuthType: String = null
+      override def authenticate(response: HttpServletResponse): Boolean = true
+      override def login(username: String, password: String): Unit = ()
+      override def getHeader(name: String): String = headers.get(name).map(_.head).orNull
+      override def getHeaders(name: String): util.Enumeration[String] = Collections.enumeration(headers(name).asJava)
+      override def getQueryString: String = uri.queryString.orNull
+      override def isUserInRole(role: String): Boolean = true
+      override def getRemoteUser: String = ""
+      override def getHeaderNames: util.Enumeration[String] = Collections.enumeration(headers.asJava.keySet())
+      override def isRequestedSessionIdFromCookie: Boolean = false
+      override def getSession(create: Boolean): HttpSession = null
+      override def getSession: HttpSession = null
+      override def getRemoteAddr: String = "SamatraTestHelper"
+      override def getServerName: String = "SamatraTestHelper"
+      override def getRemotePort: Int = -1
+      override def getRequestDispatcher(path: String): RequestDispatcher = throw new UnsupportedOperationException
+      override def getAsyncContext: AsyncContext = throw new UnsupportedOperationException
+      override def isAsyncSupported: Boolean = false
+      override def getInputStream: ServletInputStream = {
+        if (committed.getAndSet(true)) throw new IllegalStateException("Request body already read")
+        new ServletInputStream {
+          override def isReady: Boolean = true
+          override def isFinished: Boolean = bytes.available() > -1
+          override def setReadListener(readListener: ReadListener): Unit = ()
+          override def read(): Int = bytes.read()
+        }
       }
-      override def isAsyncStarted: Boolean = ???
-      override def startAsync(): AsyncContext = ???
-      override def startAsync(servletRequest: ServletRequest, servletResponse: ServletResponse): AsyncContext = ???
-      override def setCharacterEncoding(env: String): Unit = ???
-      override def getCharacterEncoding: String = ???
-      override def getServerPort: Int = ???
-      override def getAttributeNames: util.Enumeration[String] = ???
-      override def getContentLengthLong: Long = ???
-      override def getParameterNames: util.Enumeration[String] = ???
-      override def getContentType: String = ???
-      override def getLocalPort: Int = ???
-      override def getServletContext: ServletContext = null
-      override def getRemoteHost: String = ???
-      override def getLocalAddr: String = ???
-      override def getRealPath(path: String): String = ???
-      override def setAttribute(name: String, o: scala.Any): Unit = ???
-      override def getAttribute(name: String): AnyRef = ???
-      override def getLocales: util.Enumeration[Locale] = ???
-      override def removeAttribute(name: String): Unit = ???
+      override def getReader: BufferedReader = {
+        if (committed.getAndSet(true)) throw new IllegalStateException("Request body already read")
+        new BufferedReader(new InputStreamReader(bytes))
+      }
+
+      override def isAsyncStarted: Boolean = false
+      override def startAsync(): AsyncContext = throw new UnsupportedOperationException
+      override def startAsync(servletRequest: ServletRequest, servletResponse: ServletResponse): AsyncContext = throw new UnsupportedOperationException
+
+
+      override def setCharacterEncoding(env: String): Unit = ()
+      override def getCharacterEncoding: String = headers.get("Content-Type").map(_.last).map(_.split("=").toList.last).orNull //Content-Type:text/html; charset=utf-8
+
+      override def getServerPort: Int = -1
+
+      override def setAttribute(name: String, o: AnyRef): Unit = attributes.put(name, o)
+      override def getAttribute(name: String): AnyRef = attributes.get(name)
+      override def getAttributeNames: util.Enumeration[String] =  Collections.enumeration(attributes.keySet())
+      override def removeAttribute(name: String): Unit = attributes.remove(name)
+
+      override def getCookies: Array[Cookie] = ???
+
       override def getParameterValues(name: String): Array[String] = ???
+      override def getParameterNames: util.Enumeration[String] = ???
+      override def getParameterMap: util.Map[String, Array[String]] = ???
+      override def getParameter(name: String): String = ???
+      override def getParts: util.Collection[Part] = ???
+      override def getPart(name: String): Part = ???
+
+
+      override def getContentLength: Int = body.map(_.length).getOrElse(0)
+      override def getContentLengthLong: Long = bytes.available()
+      override def getContentType: String = headers.get("Content-Type").map(_.head).orNull
+
+      override def getLocalPort: Int = -1
+      override def getServletContext: ServletContext = null
+      override def getRemoteHost: String = ""
+      override def getLocalAddr: String = ""
+      override def getRealPath(path: String): String = path
+
       override def getScheme: String = "http"
-      override def getReader: BufferedReader = ???
+
       override def isSecure: Boolean = false
-      override def getProtocol: String = ???
-      override def getLocalName: String = ???
-      override def getDispatcherType: DispatcherType = ???
+      override def getProtocol: String = "http"
+      override def getLocalName: String = ""
+      override def getDispatcherType: DispatcherType = DispatcherType.REQUEST
       override def getLocale: Locale = Locale.getDefault
+      override def getLocales: util.Enumeration[Locale] = Collections.enumeration(util.Arrays.asList(getLocale))
     }
   }
 
