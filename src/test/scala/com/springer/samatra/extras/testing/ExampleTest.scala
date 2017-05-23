@@ -4,7 +4,7 @@ import java.io.Reader
 import java.net.URLEncoder
 import java.time.{Instant, LocalDate, ZoneOffset}
 import java.util.Date
-import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
+import javax.servlet.http.{Cookie, HttpServletRequest, HttpServletResponse}
 
 import com.springer.samatra.extras.responses.JsonResponses.{JsonHttpResp, JsonResponse}
 import com.springer.samatra.extras.responses.XmlResponses.XmlResp
@@ -60,7 +60,7 @@ class ExampleTest extends FunSpec with ScalaFutures {
 
     get("/hello/:name") { req =>
       Future {
-        WithCookies(Seq(AddCookie("cookie", "cookieVal"))) {
+        WithCookies(Seq(AddCookie("cookie", req.cookie("cookie").get))) {
           WithHeaders("a" -> "b") {
             req.captured("name")
           }
@@ -72,10 +72,10 @@ class ExampleTest extends FunSpec with ScalaFutures {
   describe("An example of unit testing controllers") {
 
     it("should put") {
-      whenReady(
-        put(controllerUnderTest)("/put",
-          body = URLEncoder.encode("to=/xml/hi", "UTF-8").getBytes,
-          headers = Map("Content-Type" -> Seq("application/x-www-form-urlencoded")))) { result =>
+      whenReady(put(controllerUnderTest)(
+        "/put",
+        body = URLEncoder.encode("to=/xml/hi", "UTF-8").getBytes,
+        headers = Map("Content-Type" -> Seq("application/x-www-form-urlencoded")))) { result =>
 
         val resp = result.run()
         resp.statusCode shouldBe 302
@@ -94,8 +94,8 @@ class ExampleTest extends FunSpec with ScalaFutures {
     }
 
     it("should test future string") {
-      whenReady(get(controllerUnderTest)("/hello/sam")) { result =>
-        result shouldBe WithCookies(Seq(AddCookie("cookie", "cookieVal"))) {
+      whenReady(get(controllerUnderTest)("/hello/sam", cookies = Seq(new Cookie("cookie", "expectedValue")))) { result =>
+        result shouldBe WithCookies(Seq(AddCookie("cookie", "expectedValue"))) {
           WithHeaders("a" -> "b") {
             StringResp("sam")
           }
@@ -138,6 +138,7 @@ class ExampleTest extends FunSpec with ScalaFutures {
     it("should test mustache") {
       whenReady(get(controllerUnderTest)("/templated/hi?v=1")) { result =>
         result shouldBe TemplateResponse("foo", Map("foo" -> "hi", "v" -> "1"))
+        result.run().outputAsString shouldBe "<html>This is a test. Foo: hi</html>"
       }
     }
   }
