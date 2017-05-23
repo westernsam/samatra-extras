@@ -23,7 +23,9 @@ import scala.concurrent.Future
 import scala.language.implicitConversions
 
 object SamatraControllerTestHelpers {
-  val dateFormat: SimpleDateFormat = new SimpleDateFormat("EEE, dd MM yyyy hh:mm:ss 'GMT'")
+  private val zone = TimeZone.getTimeZone("GMT")
+  private val dateFormat: SimpleDateFormat = new SimpleDateFormat("EEE, dd MM yyyy hh:mm:ss z")
+  dateFormat.setTimeZone(zone)
 
   implicit class SamatraHttpRespHelpers(resp: HttpResp) {
     private val committed = new AtomicBoolean(false)
@@ -113,7 +115,7 @@ object SamatraControllerTestHelpers {
     stream.close()
 
     private def formatDate(date: Long) = {
-      val cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"))
+      val cal = Calendar.getInstance(zone)
       cal.setTimeInMillis(date)
       dateFormat.format(cal.getTime)
     }

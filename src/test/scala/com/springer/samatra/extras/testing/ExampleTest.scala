@@ -77,7 +77,7 @@ class ExampleTest extends FunSpec with ScalaFutures {
     it("should test with helper methods") {
       whenReady(get(controllerUnderTest)("/request-response")) { result =>
         result.statusCode shouldBe 200
-        result.headers.get("Date") shouldBe Some(List("Thu, 18 05 2017 01:00:00 GMT"))
+        result.headers.get("Date") shouldBe Some(List("Thu, 18 05 2017 12:00:00 GMT"))
         result.outputAsString shouldBe "sam"
       }
     }
