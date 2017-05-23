@@ -8,7 +8,7 @@ Samatra-extras adds more dependencies but offers more out of the box. This inclu
 
 - Jetty web server configuration
 - Gzipping
-- Logging 
+- Logging with logback
 - Json, XML and Templated (Mustache) responses
 - Statsd metrics - web responses and jvm
 - Route printing on start-up (integrates nicely with Intellij) 
