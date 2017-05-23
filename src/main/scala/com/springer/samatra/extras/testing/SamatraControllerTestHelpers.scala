@@ -27,7 +27,11 @@ object SamatraControllerTestHelpers {
   private val dateFormat: SimpleDateFormat = new SimpleDateFormat("EEE, dd MM yyyy hh:mm:ss z")
   dateFormat.setTimeZone(zone)
 
-  implicit class SamatraHttpRespHelpers(resp: HttpResp) {
+  implicit class HttpRespToProcessed(resp: HttpResp) {
+    def run(): ProcessedHttpResp = new ProcessedHttpResp(resp)
+  }
+
+  class ProcessedHttpResp(resp: HttpResp) {
     private val committed = new AtomicBoolean(false)
     private val bytes = new ByteArrayOutputStream()
     private val writer = new PrintWriter(new OutputStreamWriter(bytes))
@@ -126,7 +130,7 @@ object SamatraControllerTestHelpers {
 
     def statusCode: Int = status.get()
 
-    def header(name:String): Option[String] = headers.get(name).flatMap(_.headOption)
+    def header(name: String): Option[String] = headers.get(name).flatMap(_.headOption)
 
     def headers: Map[String, Seq[String]] = {
       val contentTypeHeaders = {
@@ -269,11 +273,20 @@ object SamatraControllerTestHelpers {
     }
   }
 
-  def get(r: Routes)(path: String, headers: Map[String, Seq[String]] = Map.empty, cookies: Seq[Cookie] = Seq.empty): Future[HttpResp] = runRequest(r, httpServletRequest(path, "GET", headers, None, cookies))
-  def head(r: Routes)(path: String, headers: Map[String, Seq[String]] = Map.empty, cookies: Seq[Cookie] = Seq.empty): Future[HttpResp] = runRequest(r, httpServletRequest(path, "HEAD", headers, None, cookies))
-  def post(r: Routes)(path: String, headers: Map[String, Seq[String]] = Map.empty, body: Array[Byte], cookies: Seq[Cookie] = Seq.empty): Future[HttpResp] = runRequest(r, httpServletRequest(path, "POST", headers, Some(body), cookies))
-  def put(r: Routes)(path: String, headers: Map[String, Seq[String]] = Map.empty, body: Array[Byte], cookies: Seq[Cookie] = Seq.empty): Future[HttpResp] = runRequest(r, httpServletRequest(path, "PUT", headers, Some(body), cookies))
-  def delete(r: Routes)(path: String, headers: Map[String, Seq[String]] = Map.empty, cookies: Seq[Cookie] = Seq.empty): Future[HttpResp] = runRequest(r, httpServletRequest(path, "DELETE", headers, None, cookies))
+  def get(r: Routes)(path: String, headers: Map[String, Seq[String]] = Map.empty, cookies: Seq[Cookie] = Seq.empty): Future[HttpResp] =
+    runRequest(r, httpServletRequest(path, "GET", headers, None, cookies))
+
+  def head(r: Routes)(path: String, headers: Map[String, Seq[String]] = Map.empty, cookies: Seq[Cookie] = Seq.empty): Future[HttpResp] =
+    runRequest(r, httpServletRequest(path, "HEAD", headers, None, cookies))
+
+  def post(r: Routes)(path: String, headers: Map[String, Seq[String]] = Map.empty, body: Array[Byte], cookies: Seq[Cookie] = Seq.empty): Future[HttpResp] =
+    runRequest(r, httpServletRequest(path, "POST", headers, Some(body), cookies))
+
+  def put(r: Routes)(path: String, headers: Map[String, Seq[String]] = Map.empty, body: Array[Byte], cookies: Seq[Cookie] = Seq.empty): Future[HttpResp] =
+    runRequest(r, httpServletRequest(path, "PUT", headers, Some(body), cookies))
+
+  def delete(r: Routes)(path: String, headers: Map[String, Seq[String]] = Map.empty, cookies: Seq[Cookie] = Seq.empty): Future[HttpResp] =
+    runRequest(r, httpServletRequest(path, "DELETE", headers, None, cookies))
 
   def futureFrom(resp: HttpResp): Future[HttpResp] = resp match {
     case FutureHttpResp(fut, _, _, _, _) => fut.asInstanceOf[Future[HttpResp]]

@@ -77,16 +77,19 @@ class ExampleTest extends FunSpec with ScalaFutures {
           body = URLEncoder.encode("to=/xml/hi", "UTF-8").getBytes,
           headers = Map("Content-Type" -> Seq("application/x-www-form-urlencoded")))) { result =>
 
-        result.statusCode shouldBe 302
-        result.header("Location") shouldBe Some("/xml/hi")
+        val resp = result.run()
+        resp.statusCode shouldBe 302
+        resp.header("Location") shouldBe Some("/xml/hi")
       }
     }
 
     it("should test with helper methods") {
       whenReady(get(controllerUnderTest)("/request-response")) { result =>
-        result.statusCode shouldBe 200
-        result.header("Date") shouldBe Some("Thu, 18 05 2017 12:00:00 GMT")
-        result.outputAsString shouldBe "sam"
+        val resp = result.run()
+
+        resp.statusCode shouldBe 200
+        resp.header("Date") shouldBe Some("Thu, 18 05 2017 12:00:00 GMT")
+        resp.outputAsString shouldBe "sam"
       }
     }
 
