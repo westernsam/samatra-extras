@@ -4,6 +4,7 @@ import java.net.URLEncoder.encode
 import java.time.{LocalDate, ZoneOffset}
 import javax.servlet.http.{Cookie, HttpServletRequest, HttpServletResponse}
 
+import com.springer.samatra.extras.{RouteAndContext, RoutePrinting}
 import com.springer.samatra.extras.responses.JsonResponses.{JsonHttpResp, JsonResponse}
 import com.springer.samatra.extras.responses.XmlResponses.XmlResp
 import com.springer.samatra.extras.responses.{MustacheRenderer, TemplateRenderer, TemplateResponse}
@@ -20,7 +21,7 @@ class ExampleTest extends FunSpec with ScalaFutures {
 
   implicit val renderer: TemplateRenderer = new MustacheRenderer(Map.empty, new MustacheRenderer.ClasspathTemplateLoader("."), false)
 
-  val routes : Routes = new Controller {
+  val routes: Routes = new Controller {
 
     import com.springer.samatra.extras.responses.XmlResponses.fromXmlResponse
     import com.springer.samatra.routing.FutureResponses.Implicits.fromFuture
@@ -66,6 +67,10 @@ class ExampleTest extends FunSpec with ScalaFutures {
       }
     }
   }
+
+  new RoutePrinting with RouteAndContext {
+    override def routesWithContext: Seq[(String, Routes)] = Seq("" -> routes)
+  }.printRoutesTo(System.out)
 
   describe("An example of unit testing controllers") {
 
