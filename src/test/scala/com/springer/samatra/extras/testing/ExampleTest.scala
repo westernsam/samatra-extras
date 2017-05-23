@@ -1,6 +1,7 @@
 package com.springer.samatra.extras.testing
 
 import java.io.Reader
+import java.net.URLEncoder
 import java.time.{Instant, LocalDate, ZoneOffset}
 import java.util.Date
 import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
@@ -29,9 +30,15 @@ class ExampleTest extends FunSpec with ScalaFutures {
     import com.springer.samatra.routing.FutureResponses.Implicits.fromFuture
     import com.springer.samatra.extras.responses.XmlResponses.fromXmlResponse
 
+    put("/put") { req =>
+      Future {
+        Redirect(req.queryStringParamValue("to"))
+      }
+    }
+
     get("/templated/:foo") { req =>
       Future {
-        TemplateResponse("foo", Map("foo" -> req.captured("foo")))
+        TemplateResponse("foo", Map("foo" -> req.captured("foo")) ++ req.queryStringMap.mapValues(_.head))
       }
     }
 
@@ -44,7 +51,7 @@ class ExampleTest extends FunSpec with ScalaFutures {
     }
 
     get("/request-response") { req =>
-      (req:HttpServletRequest, resp:HttpServletResponse) => {
+      (_: HttpServletRequest, resp: HttpServletResponse) => {
         resp.setDateHeader("Date", LocalDate.of(2017, 5, 18).atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli)
         resp.setStatus(200)
         resp.getWriter.print("sam")
@@ -64,6 +71,25 @@ class ExampleTest extends FunSpec with ScalaFutures {
 
   describe("An example of unit testing controllers") {
 
+    it("should put") {
+      whenReady(
+        put(controllerUnderTest)("/put",
+          body = URLEncoder.encode("to=/xml/hi", "UTF-8").getBytes,
+          headers = Map("Content-Type" -> Seq("application/x-www-form-urlencoded")))) { result =>
+
+        result.statusCode shouldBe 302
+        result.header("Location") shouldBe Some("/xml/hi")
+      }
+    }
+
+    it("should test with helper methods") {
+      whenReady(get(controllerUnderTest)("/request-response")) { result =>
+        result.statusCode shouldBe 200
+        result.header("Date") shouldBe Some("Thu, 18 05 2017 12:00:00 GMT")
+        result.outputAsString shouldBe "sam"
+      }
+    }
+
     it("should test future string") {
       whenReady(get(controllerUnderTest)("/hello/sam")) { result =>
         result shouldBe WithCookies(Seq(AddCookie("cookie", "cookieVal"))) {
@@ -71,14 +97,6 @@ class ExampleTest extends FunSpec with ScalaFutures {
             StringResp("sam")
           }
         }
-      }
-    }
-
-    it("should test with helper methods") {
-      whenReady(get(controllerUnderTest)("/request-response")) { result =>
-        result.statusCode shouldBe 200
-        result.headers.get("Date") shouldBe Some(List("Thu, 18 05 2017 12:00:00 GMT"))
-        result.outputAsString shouldBe "sam"
       }
     }
 
@@ -115,8 +133,8 @@ class ExampleTest extends FunSpec with ScalaFutures {
     }
 
     it("should test mustache") {
-      whenReady(get(controllerUnderTest)("/templated/hi")) { result =>
-        result shouldBe TemplateResponse("foo", Map("foo" -> "hi"))
+      whenReady(get(controllerUnderTest)("/templated/hi?v=1")) { result =>
+        result shouldBe TemplateResponse("foo", Map("foo" -> "hi", "v" -> "1"))
       }
     }
   }

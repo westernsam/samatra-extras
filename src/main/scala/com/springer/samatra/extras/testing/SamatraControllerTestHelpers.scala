@@ -126,6 +126,8 @@ object SamatraControllerTestHelpers {
 
     def statusCode: Int = status.get()
 
+    def header(name:String): Option[String] = headers.get(name).flatMap(_.headOption)
+
     def headers: Map[String, Seq[String]] = {
       val contentTypeHeaders = {
         (Option(contentType.get), Option(characterEncoding.get())) match {
@@ -142,14 +144,15 @@ object SamatraControllerTestHelpers {
     def cookies: Seq[Cookie] = respCookies.asScala
   }
 
-  def httpServletRequest(path: String, method: String, headers: Map[String, Seq[String]], body: Option[Array[Byte]], cookies: Seq[Cookie]): HttpServletRequest = {
+  def httpServletRequest(url: String, method: String, headers: Map[String, Seq[String]], body: Option[Array[Byte]], cookies: Seq[Cookie]): HttpServletRequest = {
     val committed = new AtomicBoolean(false)
 
     val bytes = body match {
-      case Some(b) => new ByteArrayInputStream(body.get)
+      case Some(b) => new ByteArrayInputStream(b)
       case None => new ByteArrayInputStream(new Array[Byte](0))
     }
-    val uri = URI.parse(path)
+    val uri = URI.parse(url)
+    val path = uri.path
     val attributes = new ConcurrentHashMap[String, AnyRef]()
 
     new HttpServletRequest {
@@ -234,7 +237,13 @@ object SamatraControllerTestHelpers {
           tuples.groupBy { case (k, _) => k }.mapValues(_.map(_._2))
         }
 
-        uri.queryString.map(parse).getOrElse(Map.empty).asJava //todo params from body
+        val bodyParams = if (headers.get("Content-Type").exists(_.head == "application/x-www-form-urlencoded") && body.isDefined) {
+          parse(decode(new String(body.get), "UTF-8"))
+        } else Map.empty
+
+        (uri.queryString.map(parse).getOrElse(Map.empty) ++ bodyParams).asJava
+
+        //todo - multi-part form
       }
       override def getParts: util.Collection[Part] = ???
       override def getPart(name: String): Part = ???
