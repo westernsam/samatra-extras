@@ -1,34 +1,32 @@
 package com.springer.samatra.extras.testing
 
-import java.io.Reader
-import java.net.URLEncoder
-import java.time.{Instant, LocalDate, ZoneOffset}
-import java.util.Date
+import java.net.URLEncoder.encode
+import java.time.{LocalDate, ZoneOffset}
 import javax.servlet.http.{Cookie, HttpServletRequest, HttpServletResponse}
 
 import com.springer.samatra.extras.responses.JsonResponses.{JsonHttpResp, JsonResponse}
 import com.springer.samatra.extras.responses.XmlResponses.XmlResp
-import com.springer.samatra.extras.responses.{MustacheRenderer, TemplateRenderer, TemplateResponse, ViewRenderingError}
-import com.springer.samatra.routing.Routings.Controller
+import com.springer.samatra.extras.responses.{MustacheRenderer, TemplateRenderer, TemplateResponse}
+import com.springer.samatra.extras.testing.SamatraControllerTestHelpers._
+import com.springer.samatra.routing.Routings.{Controller, Routes}
 import com.springer.samatra.routing.StandardResponses._
 import org.scalatest.FunSpec
 import org.scalatest.Matchers._
 import org.scalatest.concurrent.ScalaFutures
-import SamatraControllerTestHelpers._
 
-import scala.collection.{immutable, mutable}
 import scala.concurrent.Future
 
 class ExampleTest extends FunSpec with ScalaFutures {
 
   implicit val renderer: TemplateRenderer = new MustacheRenderer(Map.empty, new MustacheRenderer.ClasspathTemplateLoader("."), false)
 
-  val controllerUnderTest = new Controller {
+  val routes : Routes = new Controller {
+
+    import com.springer.samatra.extras.responses.XmlResponses.fromXmlResponse
+    import com.springer.samatra.routing.FutureResponses.Implicits.fromFuture
+    import com.springer.samatra.routing.StandardResponses.Implicits.fromString
 
     import scala.concurrent.ExecutionContext.Implicits.global
-    import com.springer.samatra.routing.StandardResponses.Implicits.fromString
-    import com.springer.samatra.routing.FutureResponses.Implicits.fromFuture
-    import com.springer.samatra.extras.responses.XmlResponses.fromXmlResponse
 
     put("/put") { req =>
       Future {
@@ -72,9 +70,9 @@ class ExampleTest extends FunSpec with ScalaFutures {
   describe("An example of unit testing controllers") {
 
     it("should put") {
-      whenReady(put(controllerUnderTest)(
+      whenReady(routes.put(
         "/put",
-        body = URLEncoder.encode("to=/xml/hi", "UTF-8").getBytes,
+        body = encode("to=/xml/hi", "UTF-8").getBytes,
         headers = Map("Content-Type" -> Seq("application/x-www-form-urlencoded")))) { result =>
 
         val resp = result.run()
@@ -84,7 +82,7 @@ class ExampleTest extends FunSpec with ScalaFutures {
     }
 
     it("should test with helper methods") {
-      whenReady(get(controllerUnderTest)("/request-response")) { result =>
+      whenReady(routes.get("/request-response")) { result =>
         val resp = result.run()
 
         resp.statusCode shouldBe 200
@@ -94,7 +92,7 @@ class ExampleTest extends FunSpec with ScalaFutures {
     }
 
     it("should test future string") {
-      whenReady(get(controllerUnderTest)("/hello/sam", cookies = Seq(new Cookie("cookie", "expectedValue")))) { result =>
+      whenReady(routes.get("/hello/sam", cookies = Seq(new Cookie("cookie", "expectedValue")))) { result =>
         result shouldBe WithCookies(Seq(AddCookie("cookie", "expectedValue"))) {
           WithHeaders("a" -> "b") {
             StringResp("sam")
@@ -104,25 +102,25 @@ class ExampleTest extends FunSpec with ScalaFutures {
     }
 
     it("should test json") {
-      whenReady(get(controllerUnderTest)("/json/sam")) { result =>
+      whenReady(routes.get("/json/sam")) { result =>
         result shouldBe JsonHttpResp(JsonResponse(Map("foo" -> "sam")))
       }
     }
 
     it("should test xml") {
-      whenReady(get(controllerUnderTest)("/xml/sam")) { result =>
+      whenReady(routes.get("/xml/sam")) { result =>
         result shouldBe XmlResp("<hi>sam</hi>")
       }
     }
 
     it("returns 404 on no match") {
-      whenReady(get(controllerUnderTest)("/nomatch")) { result =>
+      whenReady(routes.get("/nomatch")) { result =>
         result shouldBe Halt(404)
       }
     }
 
     it("returns 405 on on MethodNotAllowed") {
-      whenReady(put(controllerUnderTest)("/xml/sam", body = "body".getBytes)) { result =>
+      whenReady(routes.put("/xml/sam", body = "body".getBytes)) { result =>
         result shouldBe WithHeaders("Allow" -> "GET, HEAD") {
           Halt(405)
         }
@@ -130,13 +128,13 @@ class ExampleTest extends FunSpec with ScalaFutures {
     }
 
     it("blows up on no match") {
-      whenReady(get(controllerUnderTest)("/nomatch")) { result =>
+      whenReady(routes.get("/nomatch")) { result =>
         result shouldBe Halt(404)
       }
     }
 
     it("should test mustache") {
-      whenReady(get(controllerUnderTest)("/templated/hi?v=1")) { result =>
+      whenReady(routes.get("/templated/hi?v=1")) { result =>
         result shouldBe TemplateResponse("foo", Map("foo" -> "hi", "v" -> "1"))
         result.run().outputAsString shouldBe "<html>This is a test. Foo: hi</html>"
       }
