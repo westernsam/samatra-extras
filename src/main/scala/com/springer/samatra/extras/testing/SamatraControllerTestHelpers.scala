@@ -33,6 +33,14 @@ object SamatraControllerTestHelpers {
 
   class ProcessedHttpResp(resp: HttpResp) {
     private val committed = new AtomicBoolean(false)
+    sealed trait WriterType
+    object WriterType {
+      case object STREAM extends WriterType
+      case object WRITER extends WriterType
+      case object UNDECIDED extends WriterType
+    }
+
+    private val writerType = new AtomicReference[WriterType](WriterType.UNDECIDED)
     private val bytes = new ByteArrayOutputStream()
     private val writer = new PrintWriter(new OutputStreamWriter(bytes))
     private val stream = new ServletOutputStream {
@@ -99,12 +107,14 @@ object SamatraControllerTestHelpers {
       override def reset(): Unit = ()
 
       override def getWriter: PrintWriter = {
-        if (committed.getAndSet(true)) throw new IllegalStateException("Connection already commited")
+        if (writerType.getAndSet(WriterType.WRITER) == WriterType.STREAM) throw new IllegalStateException("Using stream")
+        committed.set(true)
         writer
       }
 
       override def getOutputStream: ServletOutputStream = {
-        if (committed.getAndSet(true)) throw new IllegalStateException("Connection already commited")
+        if (writerType.getAndSet(WriterType.STREAM) == WriterType.WRITER) throw new IllegalStateException("Using stream")
+        committed.set(true)
         stream
       }
 

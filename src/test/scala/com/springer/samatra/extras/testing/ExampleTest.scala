@@ -109,6 +109,9 @@ class ExampleTest extends FunSpec with ScalaFutures {
     it("should test json") {
       whenReady(routes.get("/json/sam")) { result =>
         result shouldBe JsonHttpResp(JsonResponse(Map("foo" -> "sam")))
+        val run = result.run()
+
+        run.statusCode shouldBe 200
       }
     }
 
