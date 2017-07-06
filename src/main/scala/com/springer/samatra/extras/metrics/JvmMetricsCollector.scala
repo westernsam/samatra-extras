@@ -14,6 +14,7 @@ class JvmMetricsCollector {
     val out: mutable.Map[String, Number] = mutable.Map[String, Number]()
     recordRuntimeMemoryUsageTo(out)
     val mem: MemoryMXBean = ManagementFactory.getMemoryMXBean
+    out.put("Finalizer.count", mem.getObjectPendingFinalizationCount)
     recordHeapMemoryUsageTo(out, mem)
     recordNonHeapMemoryUsageTo(out, mem)
     recordMemoryPoolUsageTo(out, "post_gc", _.getCollectionUsage)
