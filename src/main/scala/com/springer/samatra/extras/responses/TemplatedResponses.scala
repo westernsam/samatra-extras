@@ -71,6 +71,7 @@ class MustacheRenderer(globals: Map[String, Any], templateReader: String => Read
     *                 bool:Boolean
     *                 number:Number
     *                 lambda:Lambda
+    *                 extraLeafParsers: PartialFunction[Any, Any]
     *
     */
   override def rendered(viewName: String, model: Map[String, Any]): Either[ViewRenderingError, String] = {
