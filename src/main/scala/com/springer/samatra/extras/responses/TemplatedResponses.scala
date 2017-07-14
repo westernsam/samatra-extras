@@ -40,9 +40,9 @@ case class TemplateResponse(templateName: String, model: Map[String, Any], onErr
   }
 }
 
-class MustacheRenderer(globals: Map[String, Any], templateReader: String => Reader, enableCache: Boolean, extraLeafParsers: PartialFunction[Any, Any]*) extends TemplateRenderer {
+class MustacheRenderer(globals: Map[String, Any], templateReader: String => Reader, enableCache: Boolean, extraLeafFormatters: PartialFunction[Any, Any]*) extends TemplateRenderer {
 
-  private implicit val leafParsers: PartialFunction[Any, Any] = MustacheRenderer.compose(extraLeafParsers :+ MustacheRenderer.noMatch:_*)
+  private implicit val leafFormatters: PartialFunction[Any, Any] = MustacheRenderer.compose(extraLeafFormatters :+ MustacheRenderer.noMatch:_*)
 
   private val templates = new ConcurrentHashMap[String, Template]()
   private val mustacheCompiler: Compiler = Mustache.compiler()
@@ -96,6 +96,7 @@ class MustacheRenderer(globals: Map[String, Any], templateReader: String => Read
     *               bool:Boolean
     *               number:Number
     *               lambda:Lambda
+    *               extraLeafParsers: PartialFunction[Any, Any]
     *
     */
   override def rendered(reader: Reader, model: Map[String, Any]): Either[ViewRenderingError, String] = {
@@ -137,7 +138,7 @@ object MustacheRenderer {
     case obj => throw new IllegalArgumentException(s"Don't know how to java-ise $obj of type ${obj.getClass.getSimpleName}")
   }
 
-  private def toJava(obj: Any)(implicit extraLeafParsers: PartialFunction[Any, Any]): Any = obj match {
+  private def toJava(obj: Any)(implicit extraLeafFormatters: PartialFunction[Any, Any]): Any = obj match {
     case map: Map[String, Any]@unchecked => map.mapValues(toJava).asJava
     case iterable: Iterable[_]@unchecked => iterable.map(toJava).asJava
     case array: Array[_]@unchecked => array.map(toJava)
@@ -147,7 +148,7 @@ object MustacheRenderer {
     case bool: Boolean => bool
     case number: Number => number
     case lambda: Lambda => lambda
-    case _ => extraLeafParsers.apply(obj)
+    case _ => extraLeafFormatters.apply(obj)
   }
 
   def toJavaModel(caseClass: Product)(implicit extraLeafParsers: PartialFunction[Any, Any]): util.Map[String, Any] = {
