@@ -1,6 +1,8 @@
 package com.springer.samatra.extras.responses
 
 import java.io.{FileReader, InputStream, InputStreamReader, Reader}
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Function
@@ -21,7 +23,7 @@ trait TemplateRenderer {
 
 case class ViewRenderingError(exception: Throwable) extends PrintStackTrace
 
-case class NonLeaveFormattingError(branch: java.util.Map[_, _]) extends RuntimeException(s"Only leaves can be formatted, but we got '$branch'")
+case class NonLeafFormattingError(branch: java.util.Map[_, _]) extends RuntimeException(s"Only leaves can be formatted, but we got '$branch'")
 
 case class TemplateResponse(templateName: String, model: Map[String, Any], onError: Throwable => HttpResp = err => Halt(500, Some(err)))(implicit val renderer: TemplateRenderer) extends HttpResp {
   override def process(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
@@ -38,12 +40,14 @@ case class TemplateResponse(templateName: String, model: Map[String, Any], onErr
   }
 }
 
-class MustacheRenderer(globals: Map[String, Any], templateReader: String => Reader, enableCache: Boolean) extends TemplateRenderer {
+class MustacheRenderer(globals: Map[String, Any], templateReader: String => Reader, enableCache: Boolean, extraLeafParsers: PartialFunction[Any, Any]*) extends TemplateRenderer {
+
+  private implicit val leafParsers: PartialFunction[Any, Any] = MustacheRenderer.compose(extraLeafParsers :+ MustacheRenderer.noMatch:_*)
 
   private val templates = new ConcurrentHashMap[String, Template]()
   private val mustacheCompiler: Compiler = Mustache.compiler()
     .withFormatter {
-      case m: java.util.Map[_, _] => throw NonLeaveFormattingError(m)
+      case m: java.util.Map[_, _] => throw NonLeafFormattingError(m)
       case otherwise: Any => String.valueOf(otherwise)
     }
     .withLoader(
@@ -56,22 +60,22 @@ class MustacheRenderer(globals: Map[String, Any], templateReader: String => Read
     * render the given template using the model provided.
     *
     * @param viewName template name
-    * @param model must be a map containing the following scala types (as deeply nested as you like):
+    * @param model    must be a map containing the following scala types (as deeply nested as you like):
     *
-          map: Map[String, _]
-          iterable: Iterable[_]
-          array: Array[_]
-          option: Option[_]
-          product: Product //Case class
-          str:CharSequence
-          bool:Boolean
-          number:Number
-          lambda:Lambda
+    *                 map: Map[String, _]
+    *                 iterable: Iterable[_]
+    *                 array: Array[_]
+    *                 option: Option[_]
+    *                 product: Product //Case class
+    *                 str:CharSequence
+    *                 bool:Boolean
+    *                 number:Number
+    *                 lambda:Lambda
     *
     */
   override def rendered(viewName: String, model: Map[String, Any]): Either[ViewRenderingError, String] = {
     try {
-      Right(templateFor(viewName).execute(MustacheRenderer.toJavaModel(globals ++ model)))
+      Right(templateFor(viewName).execute(MustacheRenderer.toJava(globals ++ model)))
     } catch {
       case failure: Throwable => Left(ViewRenderingError(failure))
     }
@@ -81,22 +85,22 @@ class MustacheRenderer(globals: Map[String, Any], templateReader: String => Read
     * render the template supplied by the reader using the model provided.
     *
     * @param reader a template supplied via a reader
-    * @param model must be a map containing the following scala types (as deeply nested as you like):
+    * @param model  must be a map containing the following scala types (as deeply nested as you like):
     *
-          map: Map[String, _]
-          iterable: Iterable[_]
-          array: Array[_]
-          option: Option[_]
-          product: Product //Case class
-          str:CharSequence
-          bool:Boolean
-          number:Number
-          lambda:Lambda
+    *               map: Map[String, _]
+    *               iterable: Iterable[_]
+    *               array: Array[_]
+    *               option: Option[_]
+    *               product: Product //Case class
+    *               str:CharSequence
+    *               bool:Boolean
+    *               number:Number
+    *               lambda:Lambda
     *
     */
   override def rendered(reader: Reader, model: Map[String, Any]): Either[ViewRenderingError, String] = {
     try {
-      Right(mustacheCompiler.compile(reader).execute(MustacheRenderer.toJavaModel(globals ++ model)))
+      Right(mustacheCompiler.compile(reader).execute(MustacheRenderer.toJava(globals ++ model)))
     } catch {
       case failure: Throwable => Left(ViewRenderingError(failure))
     }
@@ -110,6 +114,7 @@ class MustacheRenderer(globals: Map[String, Any], templateReader: String => Read
 
 object MustacheRenderer {
 
+
   class FileTemplateLoader(dir: String) extends (String => Reader) {
     override def apply(viewName: String): Reader = new FileReader(s"$dir/$viewName.mustache")
   }
@@ -122,22 +127,30 @@ object MustacheRenderer {
     }
   }
 
-  private def toJava(obj: Any): Any = obj match {
+  def compose[T, R] (pfs: PartialFunction[T, R]*) : PartialFunction[T, R] = pfs.reduce(_.orElse(_))
+
+  def zonedDateTimeRenderer(df: DateTimeFormatter) : PartialFunction[Any, Any] = {
+    case d:ZonedDateTime => df.format(d)
+  }
+
+  val noMatch : PartialFunction[Any, Any] = {
+    case obj => throw new IllegalArgumentException(s"Don't know how to java-ise $obj of type ${obj.getClass.getSimpleName}")
+  }
+
+  private def toJava(obj: Any)(implicit extraLeafParsers: PartialFunction[Any, Any]): Any = obj match {
     case map: Map[String, Any]@unchecked => map.mapValues(toJava).asJava
     case iterable: Iterable[_]@unchecked => iterable.map(toJava).asJava
     case array: Array[_]@unchecked => array.map(toJava)
     case option: Option[Any]@unchecked => option.map(toJava).toList.asJava
     case product: Product => toJavaModel(product)
-    case str:CharSequence => str
-    case bool:Boolean => bool
-    case number:Number => number
-    case lambda:Lambda => lambda
-    case _ => throw new IllegalArgumentException(s"Don't know how to java-ise $obj of type ${obj.getClass.getSimpleName}")
+    case str: CharSequence => str
+    case bool: Boolean => bool
+    case number: Number => number
+    case lambda: Lambda => lambda
+    case _ => extraLeafParsers.apply(obj)
   }
 
-  def toJavaModel(model: Map[String, Any]): util.Map[String, Any] = model.mapValues(toJava).asJava
-
-  def toJavaModel(caseClass: Product): util.Map[String, Any] = {
+  def toJavaModel(caseClass: Product)(implicit extraLeafParsers: PartialFunction[Any, Any]): util.Map[String, Any] = {
 
     def caseClassMap(caseClass: Product) = {
       publicFields(caseClass).map { f =>
