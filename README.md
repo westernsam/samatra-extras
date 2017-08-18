@@ -12,7 +12,6 @@ Samatra-extras adds more dependencies but offers more out of the box. This inclu
 - Json, XML and Templated (Mustache) responses
 - Statsd metrics - web responses and jvm
 - Route printing on start-up (integrates nicely with Intellij) 
-- Support for unit testing controllers (see [example](/src/test/scala/com/springer/samatra/extras/testing/ExampleTest.scala))
 
 ## Supported platforms
 - Scala 2.12
