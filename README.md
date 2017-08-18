@@ -25,7 +25,7 @@ resolvers += "jitpack" at "https://jitpack.io",
 libraryDependencies += "com.github.springernature" %% "samatra-extras" % "v1.2"	
 ```
 
-You may also be interested in [samatra-dispatch.g8](https://github.com/springernature/samatra-dispatch.g8) which is a giter8 / sbt template for generating new samatra projects.
+You may also be interested in [samatra.g8](https://github.com/springernature/samatra.g8) which is a giter8 / sbt template for generating new samatra projects.
  
 ## Licensing
 The MIT License (MIT)  http://opensource.org/licenses/MIT
