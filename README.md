@@ -22,7 +22,7 @@ Samatra-extras adds more dependencies but offers more out of the box. This inclu
 - sbt: 
 ```
 resolvers += "jitpack" at "https://jitpack.io",
-libraryDependencies += "com.github.springernature" %% "samatra-extras" % "v1.2"	
+libraryDependencies += "com.github.springernature" %% "samatra-extras" % "v1.3"	
 ```
 
 You may also be interested in [samatra.g8](https://github.com/springernature/samatra.g8) which is a giter8 / sbt template for generating new samatra projects.
