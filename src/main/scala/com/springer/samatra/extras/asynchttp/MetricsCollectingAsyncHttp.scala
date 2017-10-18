@@ -6,7 +6,7 @@ import com.springer.samatra.extras.metrics.MetricsStatsdClient
 import org.asynchttpclient._
 
 
-class MetricsCollectingAsyncHttp(underlying: AsyncHttpClient, statsd: MetricsStatsdClient, dependencyNamingStrategy: Request => String = r => r.getUri.getHost + "-" + r.getUri.getPath.replace("/", "_")) extends AsyncHttpClient {
+class MetricsCollectingAsyncHttp(underlying: AsyncHttpClient, statsd: MetricsStatsdClient, dependencyNamingStrategy: Request => String = r => r.getUri.getHost + "-" + r.getUri.getPath.replace("/", "_"), disableEncodingInBoundedRequest : Boolean = false) extends AsyncHttpClient {
   self =>
 
   val signatureCalculatorRef: AtomicReference[SignatureCalculator] = new AtomicReference[SignatureCalculator]()
@@ -38,7 +38,7 @@ class MetricsCollectingAsyncHttp(underlying: AsyncHttpClient, statsd: MetricsSta
   override def executeRequest(request: Request): ListenableFuture[Response] = executeRequest(request, new AsyncCompletionHandlerBase())
   override def executeRequest[T](request: Request, handler: AsyncHandler[T]): ListenableFuture[T] = underlying.executeRequest(request, new TimerAsyncHandler[T](statsd, dependencyNamingStrategy(request), handler, startTime = System.currentTimeMillis(), dependencyNamingStrategy))
 
-  private def requestBuilder(method: String, url: String): BoundRequestBuilder = new BoundRequestBuilder(self, method, false)
+  private def requestBuilder(method: String, url: String): BoundRequestBuilder = new BoundRequestBuilder(self, method, disableEncodingInBoundedRequest) //sorry!
     .setUrl(url).setSignatureCalculator(signatureCalculatorRef.get())
 
   private def requestBuilder(prototype: Request): BoundRequestBuilder = new BoundRequestBuilder(this, prototype).setSignatureCalculator(signatureCalculatorRef.get)
