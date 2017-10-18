@@ -29,8 +29,6 @@ abstract class BaseMetricsHandler(statsdClient: MetricsStatsdClient, handler: Ab
   def record(req: Request, response: ServletResponse): Unit
 
   override def handle(target: String, request: Request, httpRequest: HttpServletRequest, httpResponse: HttpServletResponse): Unit = {
-    if (!ignore(request)) statsdClient.incrementCounter("webapp.requests")
-
     val state: HttpChannelState = request.getHttpChannelState
 
     try {
@@ -50,6 +48,7 @@ abstract class BaseMetricsHandler(statsdClient: MetricsStatsdClient, handler: Ab
 class MetricsHandler(statsdClient: MetricsStatsdClient, handler: AbstractHandler, ignore: HttpServletRequest => Boolean = isInternal) extends BaseMetricsHandler(statsdClient, handler, ignore) {
 
   def record(req: Request, response: ServletResponse): Unit = {
+    statsdClient.incrementCounter("webapp.requests")
     statsdClient.incrementCounter(s"webapp.responses.${responseCode(req)}xx")
     val duration = System.currentTimeMillis - req.getTimeStamp
     statsdClient.recordExecutionTime("webapp.responsetime", duration)
