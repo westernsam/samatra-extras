@@ -6,7 +6,7 @@ import com.springer.samatra.extras.metrics.MetricsStatsdClient
 import org.asynchttpclient._
 
 
-class MetricsCollectingAsyncHttp(underlying: AsyncHttpClient, statsd: MetricsStatsdClient, dependencyNamingStrategy: Request => String = r => r.getUri.getHost + "-" + r.getUri.getPath.replace("/", "_"), disableEncodingInBoundedRequest : Boolean = false) extends AsyncHttpClient {
+class MetricsCollectingAsyncHttp(underlying: AsyncHttpClient, statsd: MetricsStatsdClient, dependencyNamingStrategy: Request => String = r => r.getUri.getHost.split('.').head + "-" + r.getUri.getPath.replace("/", "_"), disableEncodingInBoundedRequest : Boolean = false) extends AsyncHttpClient {
   self =>
 
   val signatureCalculatorRef: AtomicReference[SignatureCalculator] = new AtomicReference[SignatureCalculator]()
