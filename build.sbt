@@ -9,7 +9,7 @@ scalaVersion := "2.12.3"
 
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-Xfatal-warnings", "-Xlint")
 
-val jettyVersion = "9.3.6.v20151106"
+val jettyVersion = "9.4.7.v20170914"
 
 resolvers += ("Local Ivy Repository" at "file:///" + Path.userHome.absolutePath + "/.ivy2/cache")
 resolvers += "jitpack" at "https://jitpack.io"
