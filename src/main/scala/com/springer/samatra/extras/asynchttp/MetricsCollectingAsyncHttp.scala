@@ -3,10 +3,36 @@ package com.springer.samatra.extras.asynchttp
 import java.util.concurrent.atomic.AtomicReference
 
 import com.springer.samatra.extras.metrics.MetricsStatsdClient
-import org.asynchttpclient._
+import org.asynchttpclient.{AsyncHttpClient, DefaultAsyncHttpClientConfig, _}
 
+object MetricsCollectingAsyncHttp {
+  val defaultMetricNamer: Request => String = r => r.getUri.getHost.split('.').head + "_" + r.getUri.getPath.replace("/", "_")
 
-class MetricsCollectingAsyncHttp(underlying: AsyncHttpClient, statsd: MetricsStatsdClient, dependencyNamingStrategy: Request => String = r => r.getUri.getHost.split('.').head + "_" + r.getUri.getPath.replace("/", "_"), disableEncodingInBoundedRequest : Boolean = false) extends AsyncHttpClient {
+  def apply(underlying: AsyncHttpClient, statsd: MetricsStatsdClient, dependencyNamingStrategy: Request => String, disableEncodingInBoundedRequest: Boolean): AsyncHttpClient =
+    new MetricsCollectingAsyncHttp(underlying, statsd, dependencyNamingStrategy, disableEncodingInBoundedRequest)
+
+  def apply(builder: DefaultAsyncHttpClientConfig.Builder, statsd: MetricsStatsdClient, dependencyNamingStrategy: Request => String = defaultMetricNamer): AsyncHttpClient = {
+    val config = builder.build
+    new MetricsCollectingAsyncHttp(new DefaultAsyncHttpClient(config), statsd, defaultMetricNamer, config.isDisableUrlEncodingForBoundRequests)
+  }
+}
+
+class TimerAsyncHandler[T](statsD: MetricsStatsdClient, metricName: String, delegate: AsyncHandler[T], private val startTime: Long, dependencyNamingStrategy: Request => String) extends AsyncHandler[T] {
+  override def onBodyPartReceived(bodyPart: HttpResponseBodyPart): AsyncHandler.State = delegate.onBodyPartReceived(bodyPart)
+  override def onHeadersReceived(headers: HttpResponseHeaders): AsyncHandler.State = delegate.onHeadersReceived(headers)
+
+  override def onStatusReceived(responseStatus: HttpResponseStatus): AsyncHandler.State = {
+    delegate.onStatusReceived(responseStatus)
+  }
+
+  override def onCompleted(): T = {
+    statsD.recordExecutionTime(s"dependency.responsetime.$metricName", System.currentTimeMillis() - startTime)
+    delegate.onCompleted()
+  }
+  override def onThrowable(t: Throwable): Unit = delegate.onThrowable(t)
+}
+
+class MetricsCollectingAsyncHttp(underlying: AsyncHttpClient, statsd: MetricsStatsdClient, dependencyNamingStrategy: Request => String, disableEncodingInBoundedRequest: Boolean) extends AsyncHttpClient {
   self =>
 
   val signatureCalculatorRef: AtomicReference[SignatureCalculator] = new AtomicReference[SignatureCalculator]()
@@ -43,19 +69,4 @@ class MetricsCollectingAsyncHttp(underlying: AsyncHttpClient, statsd: MetricsSta
 
   private def requestBuilder(prototype: Request): BoundRequestBuilder = new BoundRequestBuilder(this, prototype).setSignatureCalculator(signatureCalculatorRef.get)
 
-}
-
-class TimerAsyncHandler[T](statsD: MetricsStatsdClient, metricName: String, delegate: AsyncHandler[T], private val startTime: Long, dependencyNamingStrategy: Request => String) extends AsyncHandler[T] {
-  override def onBodyPartReceived(bodyPart: HttpResponseBodyPart): AsyncHandler.State = delegate.onBodyPartReceived(bodyPart)
-  override def onHeadersReceived(headers: HttpResponseHeaders): AsyncHandler.State = delegate.onHeadersReceived(headers)
-
-  override def onStatusReceived(responseStatus: HttpResponseStatus): AsyncHandler.State = {
-    delegate.onStatusReceived(responseStatus)
-  }
-
-  override def onCompleted(): T = {
-    statsD.recordExecutionTime(s"dependency.responsetime.$metricName", System.currentTimeMillis() - startTime)
-    delegate.onCompleted()
-  }
-  override def onThrowable(t: Throwable): Unit = delegate.onThrowable(t)
 }
