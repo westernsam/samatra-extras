@@ -13,7 +13,7 @@ object MetricsCollectingAsyncHttp {
 
   def apply(builder: DefaultAsyncHttpClientConfig.Builder, statsd: MetricsStatsdClient, dependencyNamingStrategy: Request => String = defaultMetricNamer): AsyncHttpClient = {
     val config = builder.build
-    new MetricsCollectingAsyncHttp(new DefaultAsyncHttpClient(config), statsd, defaultMetricNamer, config.isDisableUrlEncodingForBoundRequests)
+    new MetricsCollectingAsyncHttp(new DefaultAsyncHttpClient(config), statsd, dependencyNamingStrategy, config.isDisableUrlEncodingForBoundRequests)
   }
 }
 
