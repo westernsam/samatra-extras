@@ -1,8 +1,8 @@
 package com.springer.samatra.extras.asynchttp
 
-import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
 
-import com.springer.samatra.extras.metrics.MetricsStatsdClient
+import com.springer.samatra.extras.metrics.{MetricsHandler, MetricsStatsdClient}
 import org.asynchttpclient.{AsyncHttpClient, DefaultAsyncHttpClientConfig, _}
 
 object MetricsCollectingAsyncHttp {
@@ -18,14 +18,20 @@ object MetricsCollectingAsyncHttp {
 }
 
 class TimerAsyncHandler[T](statsD: MetricsStatsdClient, metricName: String, delegate: AsyncHandler[T], private val startTime: Long, dependencyNamingStrategy: Request => String) extends AsyncHandler[T] {
+
+  val statusReceived = new AtomicInteger()(200)
+
   override def onBodyPartReceived(bodyPart: HttpResponseBodyPart): AsyncHandler.State = delegate.onBodyPartReceived(bodyPart)
   override def onHeadersReceived(headers: HttpResponseHeaders): AsyncHandler.State = delegate.onHeadersReceived(headers)
 
   override def onStatusReceived(responseStatus: HttpResponseStatus): AsyncHandler.State = {
+    statusReceived.getAndSet(responseStatus.getStatusCode)
     delegate.onStatusReceived(responseStatus)
   }
 
   override def onCompleted(): T = {
+    statsD.incrementCounter(s"dependency.$metricName.responses.${MetricsHandler.responseCode(statusReceived.get)}")
+    statsD.incrementCounter(s"dependency.$metricName")
     statsD.recordExecutionTime(s"dependency.responsetime.$metricName", System.currentTimeMillis() - startTime)
     delegate.onCompleted()
   }
@@ -64,7 +70,7 @@ class MetricsCollectingAsyncHttp(underlying: AsyncHttpClient, statsd: MetricsSta
   override def executeRequest(request: Request): ListenableFuture[Response] = executeRequest(request, new AsyncCompletionHandlerBase())
   override def executeRequest[T](request: Request, handler: AsyncHandler[T]): ListenableFuture[T] = underlying.executeRequest(request, new TimerAsyncHandler[T](statsd, dependencyNamingStrategy(request), handler, startTime = System.currentTimeMillis(), dependencyNamingStrategy))
 
-  private def requestBuilder(method: String, url: String): BoundRequestBuilder = new BoundRequestBuilder(self, method, disableEncodingInBoundedRequest) //sorry!
+  private def requestBuilder(method: String, url: String): BoundRequestBuilder = new BoundRequestBuilder(self, method, disableEncodingInBoundedRequest)
     .setUrl(url).setSignatureCalculator(signatureCalculatorRef.get())
 
   private def requestBuilder(prototype: Request): BoundRequestBuilder = new BoundRequestBuilder(this, prototype).setSignatureCalculator(signatureCalculatorRef.get)

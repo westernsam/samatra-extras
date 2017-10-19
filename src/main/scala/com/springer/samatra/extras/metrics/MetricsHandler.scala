@@ -3,13 +3,14 @@ package com.springer.samatra.extras.metrics
 import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 import javax.servlet.{AsyncEvent, AsyncListener, ServletResponse}
 
-import com.springer.samatra.extras.metrics.MetricsHandler.isInternal
+import com.springer.samatra.extras.metrics.MetricsHandler._
 import com.springer.samatra.routing.Routings.{PathParamsRoute, RegexRoute, Routes}
 import org.eclipse.jetty.server.handler.{AbstractHandler, HandlerWrapper}
 import org.eclipse.jetty.server.{AsyncContextEvent, HttpChannelState, Request}
 
 object MetricsHandler {
   def isInternal(request: HttpServletRequest): Boolean = request.getRequestURI.startsWith("/internal")
+  def responseCode(status:Int): String = s"${status / 100}xx"
 }
 
 abstract class BaseMetricsHandler(statsdClient: MetricsStatsdClient, handler: AbstractHandler, ignore: HttpServletRequest => Boolean) extends HandlerWrapper {
@@ -41,15 +42,13 @@ abstract class BaseMetricsHandler(statsdClient: MetricsStatsdClient, handler: Ab
       } else if (state.isInitial) record(request, httpResponse)
     }
   }
-
-  protected def responseCode(request: Request): Int = request.getResponse.getStatus / 100
 }
 
 class MetricsHandler(statsdClient: MetricsStatsdClient, handler: AbstractHandler, ignore: HttpServletRequest => Boolean = isInternal) extends BaseMetricsHandler(statsdClient, handler, ignore) {
 
   def record(req: Request, response: ServletResponse): Unit = {
     statsdClient.incrementCounter("webapp.requests")
-    statsdClient.incrementCounter(s"webapp.responses.${responseCode(req)}xx")
+    statsdClient.incrementCounter(s"webapp.responses.${responseCode(req.getResponse.getStatus)}")
     val duration = System.currentTimeMillis - req.getTimeStamp
     statsdClient.recordExecutionTime("webapp.responsetime", duration)
   }
@@ -75,7 +74,7 @@ class RouteMetricsHandler(routesWithContext: Seq[(String, Routes)], statsdClient
 
     routeName.foreach { case (c, r) =>
       val path = pathTransformer(s"$c$r")
-      statsdClient.incrementCounter(s"webapp.$path.responses.${responseCode(req)}xx")
+      statsdClient.incrementCounter(s"webapp.$path.responses.${responseCode(req.getResponse.getStatus)}")
       val duration = System.currentTimeMillis - req.getTimeStamp
       statsdClient.recordExecutionTime(s"webapp.$path.responsetime", duration)
     }
