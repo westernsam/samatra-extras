@@ -19,7 +19,7 @@ object MetricsCollectingAsyncHttp {
 
 class TimerAsyncHandler[T](statsD: MetricsStatsdClient, metricName: String, delegate: AsyncHandler[T], private val startTime: Long, dependencyNamingStrategy: Request => String) extends AsyncHandler[T] {
 
-  val statusReceived = new AtomicInteger()(200)
+  val statusReceived = new AtomicInteger(200)
 
   override def onBodyPartReceived(bodyPart: HttpResponseBodyPart): AsyncHandler.State = delegate.onBodyPartReceived(bodyPart)
   override def onHeadersReceived(headers: HttpResponseHeaders): AsyncHandler.State = delegate.onHeadersReceived(headers)
