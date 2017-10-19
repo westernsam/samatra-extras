@@ -55,19 +55,29 @@ class MetricsHandler(statsdClient: MetricsStatsdClient, handler: AbstractHandler
   }
 }
 
-class RouteMetricsHandler(routes: Routes, statsdClient: MetricsStatsdClient, handler: AbstractHandler, ignore: HttpServletRequest => Boolean = isInternal) extends BaseMetricsHandler(statsdClient, handler, ignore) {
+
+class RouteMetricsHandler(routesWithContext: Seq[(String, Routes)], statsdClient: MetricsStatsdClient, handler: AbstractHandler, ignore: HttpServletRequest => Boolean = isInternal, pathTransformer: String => String = identity) extends BaseMetricsHandler(statsdClient, handler, ignore) {
 
   def record(req: Request, response: ServletResponse) {
-    val routeName: Option[String] = routes.matching(req, response.asInstanceOf[HttpServletResponse]) match {
-      case Right(PathParamsRoute(_, path, _)) => Some(path)
-      case Right(RegexRoute(_, pattern, _)) => Some(pattern.toString())
-      case _ => None
-    }
 
-    routeName.foreach { pattern =>
-      statsdClient.incrementCounter(s"webapp.$pattern.responses.${responseCode(req)}xx")
+    val routeName: Option[(String, String)] = routesWithContext.flatMap { case (c, r) =>
+
+      req.setServletPath(c)
+
+      val routeName: Option[String] = r.matching(req, response.asInstanceOf[HttpServletResponse]) match {
+        case Right(PathParamsRoute(_, path, _)) => Some(path)
+        case Right(RegexRoute(_, pattern, _)) => Some(pattern.toString())
+        case _ => None
+      }
+
+      routeName.map(c -> _)
+    }.headOption
+
+    routeName.foreach { case (c, r) =>
+      val path = pathTransformer(s"$c$r")
+      statsdClient.incrementCounter(s"webapp.$path.responses.${responseCode(req)}xx")
       val duration = System.currentTimeMillis - req.getTimeStamp
-      statsdClient.recordExecutionTime(s"webapp.$pattern.responsetime", duration)
+      statsdClient.recordExecutionTime(s"webapp.$path.responsetime", duration)
     }
   }
 }
