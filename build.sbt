@@ -16,7 +16,7 @@ resolvers += "jitpack" at "https://jitpack.io"
 
 libraryDependencies ++=
   Seq(
-    "com.github.springernature" %% "samatra" % "v1.3",
+    "com.github.springernature" %% "samatra" % "v1.4",
 
     "org.eclipse.jetty" % "jetty-webapp" % jettyVersion,
     "org.eclipse.jetty" % "jetty-server" % jettyVersion,
