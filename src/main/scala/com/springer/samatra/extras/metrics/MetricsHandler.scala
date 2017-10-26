@@ -55,7 +55,10 @@ class MetricsHandler(statsdClient: MetricsStatsdClient, handler: AbstractHandler
 }
 
 
-class RouteMetricsHandler(routesWithContext: Seq[(String, Routes)], statsdClient: MetricsStatsdClient, handler: AbstractHandler, ignore: HttpServletRequest => Boolean = isInternal, pathTransformer: String => String = identity) extends BaseMetricsHandler(statsdClient, handler, ignore) {
+class RouteMetricsHandler(routesWithContext: Seq[(String, Routes)], statsdClient: MetricsStatsdClient, handler: AbstractHandler, ignore: HttpServletRequest => Boolean = isInternal, pathTransformer: String => String = _
+  .replaceAll("\\s+", "_")
+  .replaceAll("\\/", "_")
+  .replaceAll("[^a-zA-Z_\\-0-9]", "-")) extends BaseMetricsHandler(statsdClient, handler, ignore) {
 
   def record(req: Request, response: ServletResponse) {
 
