@@ -10,14 +10,14 @@ import org.eclipse.jetty.server.{AsyncContextEvent, HttpChannelState, Request}
 
 object MetricsHandler {
   def isInternal(request: HttpServletRequest): Boolean = request.getRequestURI.startsWith("/internal")
-  def responseCode(status:Int): String = s"${status / 100}xx"
+  def responseCode(status: Int): String = s"${status / 100}xx"
 }
 
 abstract class BaseMetricsHandler(statsdClient: MetricsStatsdClient, handler: AbstractHandler, ignore: HttpServletRequest => Boolean) extends HandlerWrapper {
 
   setHandler(handler)
 
-  val asyncRecorder = new AsyncListener {
+  val asyncRecorder: AsyncListener = new AsyncListener {
     override def onError(event: AsyncEvent): Unit = ()
     override def onComplete(event: AsyncEvent): Unit = {
       val state = event.asInstanceOf[AsyncContextEvent].getHttpChannelState

@@ -6,7 +6,7 @@ import com.springer.samatra.extras.metrics.{MetricsHandler, MetricsStatsdClient}
 import org.asynchttpclient.{AsyncHttpClient, DefaultAsyncHttpClientConfig, _}
 
 object MetricsCollectingAsyncHttp {
-  val defaultMetricNamer: Request => String = r => r.getUri.getHost.split('.').head + "_" + r.getUri.getPath.replace("/", "_")
+  val defaultMetricNamer: Request => String = r => r.getUri.getHost.split('.').head
 
   def apply(underlying: AsyncHttpClient, statsd: MetricsStatsdClient, dependencyNamingStrategy: Request => String, disableEncodingInBoundedRequest: Boolean): AsyncHttpClient =
     new MetricsCollectingAsyncHttp(underlying, statsd, dependencyNamingStrategy, disableEncodingInBoundedRequest)
