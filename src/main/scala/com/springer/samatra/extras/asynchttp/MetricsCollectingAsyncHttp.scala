@@ -54,7 +54,7 @@ class TimerAsyncHandler[T](request: Request, statsD: MetricsStatsdClient, metric
 
   private def record() = {
     Option(statusReceived.get()).foreach { st =>
-      log.info(s""""${request.getMethod} ${URI.parse(request.getUri.toString).format} ${st.getProtocolText}" ${st.getStatusCode} ${bytesReceived.get()}""")
+      log.debug(s""""${request.getMethod} ${URI.parse(request.getUri.toString).format} ${st.getProtocolText}" ${st.getStatusCode} ${bytesReceived.get()}""")
       statsD.incrementCounter(s"dependency.$metricName.responses.${MetricsHandler.responseCode(st.getStatusCode)}")
       statsD.incrementCounter(s"dependency.$metricName")
       statsD.recordExecutionTime(s"dependency.responsetime.$metricName", System.currentTimeMillis() - startTime)
