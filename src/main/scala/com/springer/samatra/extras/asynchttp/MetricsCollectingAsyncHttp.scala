@@ -2,8 +2,12 @@ package com.springer.samatra.extras.asynchttp
 
 import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
 
+import com.springer.samatra.extras.Logger
+import com.springer.samatra.extras.http.URI
 import com.springer.samatra.extras.metrics.{MetricsHandler, MetricsStatsdClient}
 import org.asynchttpclient.{AsyncHttpClient, DefaultAsyncHttpClientConfig, _}
+
+import scala.util.control.NonFatal
 
 object MetricsCollectingAsyncHttp {
   val defaultMetricNamer: Request => String = r => r.getUri.getHost.split('.').head
@@ -17,25 +21,53 @@ object MetricsCollectingAsyncHttp {
   }
 }
 
-class TimerAsyncHandler[T](statsD: MetricsStatsdClient, metricName: String, delegate: AsyncHandler[T], private val startTime: Long, dependencyNamingStrategy: Request => String) extends AsyncHandler[T] {
+class TimerAsyncHandler[T](request: Request, statsD: MetricsStatsdClient, metricName: String, delegate: AsyncHandler[T], private val startTime: Long) extends Logger with AsyncHandler[T] {
 
-  val statusReceived = new AtomicInteger(200)
+  val statusReceived = new AtomicReference[HttpResponseStatus]()
+  val bytesReceived = new AtomicInteger(0)
 
-  override def onBodyPartReceived(bodyPart: HttpResponseBodyPart): AsyncHandler.State = delegate.onBodyPartReceived(bodyPart)
+  override def onBodyPartReceived(bodyPart: HttpResponseBodyPart): AsyncHandler.State = {
+    bytesReceived.addAndGet(bodyPart.length())
+    delegate.onBodyPartReceived(bodyPart)
+  }
+
   override def onHeadersReceived(headers: HttpResponseHeaders): AsyncHandler.State = delegate.onHeadersReceived(headers)
 
   override def onStatusReceived(responseStatus: HttpResponseStatus): AsyncHandler.State = {
-    statusReceived.getAndSet(responseStatus.getStatusCode)
-    delegate.onStatusReceived(responseStatus)
+    statusReceived.getAndSet(responseStatus)
+    try {
+      delegate.onStatusReceived(responseStatus)
+    } catch {
+      case NonFatal(t) =>
+        record()
+        throw t
+    }
   }
 
   override def onCompleted(): T = {
-    statsD.incrementCounter(s"dependency.$metricName.responses.${MetricsHandler.responseCode(statusReceived.get)}")
-    statsD.incrementCounter(s"dependency.$metricName")
-    statsD.recordExecutionTime(s"dependency.responsetime.$metricName", System.currentTimeMillis() - startTime)
-    delegate.onCompleted()
+    try {
+      delegate.onCompleted()
+    } finally {
+      record()
+    }
   }
-  override def onThrowable(t: Throwable): Unit = delegate.onThrowable(t)
+
+  private def record() = {
+    Option(statusReceived.get()).foreach { st =>
+      log.info(s""""${request.getMethod} ${URI.parse(request.getUri.toString).format} ${st.getProtocolText}" ${st.getStatusCode} ${bytesReceived.get()}""")
+      statsD.incrementCounter(s"dependency.$metricName.responses.${MetricsHandler.responseCode(st.getStatusCode)}")
+      statsD.incrementCounter(s"dependency.$metricName")
+      statsD.recordExecutionTime(s"dependency.responsetime.$metricName", System.currentTimeMillis() - startTime)
+    }
+  }
+
+  override def onThrowable(t: Throwable): Unit = {
+    try {
+      delegate.onThrowable(t)
+    } finally {
+      record()
+    }
+  }
 }
 
 class MetricsCollectingAsyncHttp(underlying: AsyncHttpClient, statsd: MetricsStatsdClient, dependencyNamingStrategy: Request => String, disableEncodingInBoundedRequest: Boolean) extends AsyncHttpClient {
@@ -68,7 +100,7 @@ class MetricsCollectingAsyncHttp(underlying: AsyncHttpClient, statsd: MetricsSta
   override def executeRequest(requestBuilder: RequestBuilder): ListenableFuture[Response] = executeRequest(requestBuilder.build())
   override def executeRequest[T](requestBuilder: RequestBuilder, handler: AsyncHandler[T]): ListenableFuture[T] = executeRequest(requestBuilder.build(), handler)
   override def executeRequest(request: Request): ListenableFuture[Response] = executeRequest(request, new AsyncCompletionHandlerBase())
-  override def executeRequest[T](request: Request, handler: AsyncHandler[T]): ListenableFuture[T] = underlying.executeRequest(request, new TimerAsyncHandler[T](statsd, dependencyNamingStrategy(request), handler, startTime = System.currentTimeMillis(), dependencyNamingStrategy))
+  override def executeRequest[T](request: Request, handler: AsyncHandler[T]): ListenableFuture[T] = underlying.executeRequest(request, new TimerAsyncHandler[T](request, statsd, dependencyNamingStrategy(request), handler, startTime = System.currentTimeMillis()))
 
   private def requestBuilder(method: String, url: String): BoundRequestBuilder = new BoundRequestBuilder(self, method, disableEncodingInBoundedRequest)
     .setUrl(url).setSignatureCalculator(signatureCalculatorRef.get())
