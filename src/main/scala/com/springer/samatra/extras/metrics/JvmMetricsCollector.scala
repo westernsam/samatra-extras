@@ -71,12 +71,12 @@ class JvmMetricsCollector {
   private def recordJettyThreadStats(out: mutable.Map[String, Number]) {
     val server = ManagementFactory.getPlatformMBeanServer
     if (server.isRegistered(jettyThreadPoolInstance)) {
-      out.put("jetty_threads.min", server.getAttribute(jettyThreadPoolInstance, "minThreads").asInstanceOf[Int])
-      out.put("jetty_threads.num", server.getAttribute(jettyThreadPoolInstance, "threads").asInstanceOf[Int])
-      out.put("jetty_threads.max", server.getAttribute(jettyThreadPoolInstance, "maxThreads").asInstanceOf[Int])
-      out.put("jetty_threads.idle", server.getAttribute(jettyThreadPoolInstance, "idleThreads").asInstanceOf[Int])
-      out.put("jetty_threads.busy", server.getAttribute(jettyThreadPoolInstance, "busyThreads").asInstanceOf[Int])
-      out.put("jetty_threads.queued", server.getAttribute(jettyThreadPoolInstance, "queueSize").asInstanceOf[Int])
+      out.put("jetty_threads.min", server.getAttribute(jettyThreadPoolInstance, "minThreads").asInstanceOf[Int].toLong)
+      out.put("jetty_threads.num", server.getAttribute(jettyThreadPoolInstance, "threads").asInstanceOf[Int].toLong)
+      out.put("jetty_threads.max", server.getAttribute(jettyThreadPoolInstance, "maxThreads").asInstanceOf[Int].toLong)
+      out.put("jetty_threads.idle", server.getAttribute(jettyThreadPoolInstance, "idleThreads").asInstanceOf[Int].toLong)
+      out.put("jetty_threads.busy", server.getAttribute(jettyThreadPoolInstance, "busyThreads").asInstanceOf[Int].toLong)
+      out.put("jetty_threads.queued", server.getAttribute(jettyThreadPoolInstance, "queueSize").asInstanceOf[Int].toLong)
     }
   }
 
