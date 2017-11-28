@@ -2,6 +2,7 @@ package com.springer.samatra.extras.metrics
 
 import java.lang.Math._
 import java.lang.management.{RuntimeMXBean, ThreadMXBean, _}
+import javax.management.ObjectName
 
 import com.sun.management.UnixOperatingSystemMXBean
 
@@ -10,6 +11,7 @@ import scala.collection.mutable
 
 
 class JvmMetricsCollector {
+
   def jvmGauges: mutable.Map[String, Number] = {
     val out: mutable.Map[String, Number] = mutable.Map[String, Number]()
     recordRuntimeMemoryUsageTo(out)
@@ -22,6 +24,7 @@ class JvmMetricsCollector {
     recordThreadInfoTo(out)
     recordUptimeTo(out)
     recordOsStatsTo(out)
+    recordJettyThreadStats(out)
     out
   }
 
@@ -62,6 +65,21 @@ class JvmMetricsCollector {
     out.put("start_time", runtime.getStartTime)
     out.put("uptime", runtime.getUptime)
   }
+
+  private val jettyThreadPoolInstance = ObjectName.getInstance("org.eclipse.jetty.util.thread:type=queuedthreadpool,id=0")
+
+  private def recordJettyThreadStats(out: mutable.Map[String, Number]) {
+    val server = ManagementFactory.getPlatformMBeanServer
+    if (server.isRegistered(jettyThreadPoolInstance)) {
+      out.put("jetty_threads.min", server.getAttribute(jettyThreadPoolInstance, "minThreads").asInstanceOf[Int])
+      out.put("jetty_threads.num", server.getAttribute(jettyThreadPoolInstance, "threads").asInstanceOf[Int])
+      out.put("jetty_threads.max", server.getAttribute(jettyThreadPoolInstance, "maxThreads").asInstanceOf[Int])
+      out.put("jetty_threads.idle", server.getAttribute(jettyThreadPoolInstance, "idleThreads").asInstanceOf[Int])
+      out.put("jetty_threads.busy", server.getAttribute(jettyThreadPoolInstance, "busyThreads").asInstanceOf[Int])
+      out.put("jetty_threads.queued", server.getAttribute(jettyThreadPoolInstance, "queueSize").asInstanceOf[Int])
+    }
+  }
+
   private def recordOsStatsTo(out: mutable.Map[String, Number]) {
     val os: OperatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean
     out.put("num_cpus", os.getAvailableProcessors.toLong)
