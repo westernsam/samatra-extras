@@ -3,12 +3,13 @@ package com.springer.samatra.extras.metrics
 import javax.servlet.http.HttpServletRequest
 
 import com.springer.samatra.extras.WebappContextHandler
+import org.eclipse.jetty.server.handler.AbstractHandler
 import org.eclipse.jetty.server.handler.gzip.GzipHandler
 
 
 object MetricsHandlers {
 
-  def gzipAndWebMetrics(rest: WebappContextHandler, statsDClient: MetricsStatsdClient,
+  def gzipAndWebMetrics(rest: AbstractHandler, statsDClient: MetricsStatsdClient,
                         ignoreInMetrics: HttpServletRequest => Boolean = MetricsHandler.isInternal): GzipHandler = {
     new GzipHandler {
       //defaults to *MS6.0* - and therefore adds Vary: user-agent header
