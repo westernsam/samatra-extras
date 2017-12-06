@@ -8,7 +8,7 @@ import org.eclipse.jetty.server.{Connector, Server, ServerConnector}
 import org.eclipse.jetty.util.thread.QueuedThreadPool
 
 object WebServer {
-  def standardConfig(connector:ServerConnector) : Unit = {
+  def standardConfig(connector: ServerConnector): Unit = {
     /*
     * Reduce amount of time socket spend in TIME_WAIT after server initiates close
     *
@@ -20,14 +20,15 @@ object WebServer {
   }
 }
 
-class WebServer(port: Int = 0, configureConnector: (ServerConnector) => Unit = WebServer.standardConfig, maxJettyThreads: Int = 25) extends Logger {
+class WebServer(port: Int = 0, configureConnector: (ServerConnector) => Unit = WebServer.standardConfig, configureServer: (Server) => Unit = _ => (), maxJettyThreads: Int = 25) extends Logger {
 
   private val server = new Server(new QueuedThreadPool(maxJettyThreads))
   val connector: ServerConnector = new ServerConnector(server)
   connector.setPort(port)
   configureConnector(connector)
 
-  server.setConnectors(Array[Connector](connector))
+  server.addConnector(connector)
+  configureServer(server)
 
   private val handlers = new HandlerCollection()
   server.setHandler(handlers)

@@ -23,7 +23,7 @@ object MetricsHandlers {
     new GzipHandler {
       //defaults to *MS6.0* - and therefore adds Vary: user-agent header
       setExcludedAgentPatterns()
-      setHandler(new RouteMetricsHandler(rest.routesWithContext, statsDClient, new MetricsHandler(statsDClient, rest, ignoreInMetrics)))
+      setHandler(new MetricsHandler(statsDClient, new RouteMetricsHandler(rest.routesWithContext, statsDClient, rest)))
     }
   }
 }
