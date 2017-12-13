@@ -27,6 +27,7 @@ libraryDependencies ++=
     "org.eclipse.jetty" % "jetty-servlets" % jettyVersion,
     "org.eclipse.jetty" % "jetty-util" % jettyVersion,
     "org.eclipse.jetty" % "jetty-jmx" % jettyVersion,
+    "org.eclipse.jetty.websocket" % "websocket-server" % jettyVersion,
 
     "org.slf4j" % "slf4j-api" % "1.7.23",
     "com.samskivert" % "jmustache" % "1.12",
