@@ -20,11 +20,10 @@ object WS {
   * Todos:
   * - can this be made using javax.websocket.api only?
   * - can we make in memory testing work?
-  * - fix route printing
-  *   - indicate it's a ws endpoint
-  *   - fix line numbers
   * */
-  abstract class WSController {
+  abstract class WSController extends Routes {
+    private[WS] val socks = mutable.Buffer[(String, WSSocket)]()
+    val routes: mutable.Buffer[Route] = mutable.Buffer[Route]()
 
     trait WSSend {
       def send(msg: String): Unit
@@ -47,9 +46,10 @@ object WS {
       final override def onMsg(msg: Array[Byte]): Unit = ()
     }
 
-    private[WS] val socks = mutable.Buffer[(String, WSSocket)]()
-
-    def mount(path: String)(ws: WSSend => WS): Unit = socks.append(path -> new WSSocket(ws))
+    def mount(path: String)(ws: WSSend => WS): Unit = {
+      socks.append(path -> new WSSocket(ws))
+      routes.append(PathParamsRoute(GET, path, ws.asInstanceOf[Request => HttpResp]))
+    }
 
     class WSSocket(val ws: WSSend => WS) extends WebSocketListener {
       var wsoc: WS = _
@@ -98,9 +98,7 @@ object WS {
     def addWsRoutes(pathSpec: String, idleTime: Option[Long], wSControllers: WSController*): this.type = {
 
       val wcs: Seq[(String, WSController#WSSocket)] = wSControllers.toSeq.flatMap(_.socks.toSeq)
-      val routes: Seq[PathParamsRoute] = wcs.map {
-        case (path, wc) => PathParamsRoute(GET, path, wc.ws.asInstanceOf[Request => HttpResp])
-      }
+      val routes: Seq[Route] = wSControllers.flatMap(_.routes)
 
       val servlet = new WebSocketServlet {
         override def configure(factory: WebSocketServletFactory): Unit = {
@@ -109,13 +107,13 @@ object WS {
           factory.setCreator((req: ServletUpgradeRequest, _: ServletUpgradeResponse) => {
             val request = Request(req.getHttpServletRequest, Map.empty, started = System.currentTimeMillis())
 
-            val tuples: Seq[(PathParamsRoute, (String, WSController#WSSocket))] = routes.zip(wcs)
+            val tuples: Seq[(Route, (String, WSController#WSSocket))] = routes.zip(wcs)
             tuples.find(_._1.matches(request).isDefined).map(_._2._2).orNull
           })
         }
       }
 
-      self.routesWithContext.append(pathSpec.substring(0, pathSpec.length - 2) -> new WsRoutes(routes))
+      self.routesWithContext.append("ws://(hostname)" + pathSpec.substring(0, pathSpec.length - 2) -> new AggregateRoutes(wSControllers:_*))
       self.addServlet(new ServletHolder(servlet), pathSpec)
 
       this
