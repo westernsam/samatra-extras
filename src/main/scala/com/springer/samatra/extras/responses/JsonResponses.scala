@@ -16,7 +16,7 @@ object JsonResponses {
   case class JsonHttpResp(json: JsonResponse) extends HttpResp {
     private val serializer: JsonSerilizer = new NonRecursiveJsonSerializer()
     override def process(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
-      resp.setContentType("application/json")
+      resp.setContentType("application/json; charset=utf-8")
       resp.setStatus(200)
       try serializer.toJson(json.body, resp.getOutputStream) finally resp.getOutputStream.flush()
     }

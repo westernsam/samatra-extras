@@ -14,7 +14,7 @@ object XmlResponses {
   case class XmlResp(xml:String) extends HttpResp {
     def this(elem:Elem) = this(elem.buildString(stripComments = true))
     override def process(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
-      resp.setContentType("application/xml")
+      resp.setContentType("application/xml; charset=utf-8")
       resp.setStatus(200)
       resp.getOutputStream.write(xml.getBytes)
     }
