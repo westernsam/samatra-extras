@@ -43,6 +43,7 @@ class WebServer(port: Int = 0, configureConnector: (ServerConnector) => Unit = W
   }
 
   def addHandler(handler: AbstractHandler): WebServer = {
+    handler.setServer(server)
     handlers.addHandler(handler)
     this
   }

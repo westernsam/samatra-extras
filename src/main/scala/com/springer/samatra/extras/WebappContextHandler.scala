@@ -6,6 +6,7 @@ import java.util
 import javassist.{ClassPool, CtClass}
 import javax.servlet.{DispatcherType, Filter}
 
+import com.springer.samatra.extras.websockets.WebSocketRoutes
 import com.springer.samatra.routing.Routings.{AggregateRoutes, HttpResp, PathParamsRoute, RegexRoute, Route, Routes}
 import com.springer.samatra.routing.{Request, Routings}
 import org.eclipse.jetty.servlet.{FilterHolder, ServletContextHandler, ServletHolder}
@@ -13,6 +14,7 @@ import org.eclipse.jetty.servlet.{FilterHolder, ServletContextHandler, ServletHo
 import scala.collection.mutable
 import scala.util.control.NonFatal
 import scala.util.{Success, Try}
+
 trait RouteAndContext {
   def routesWithContext: Seq[(String, Routes)]
 }
@@ -36,7 +38,7 @@ class WebappContextHandler extends ServletContextHandler with RouteAndContext {
 trait RoutePrinting {
   self: RouteAndContext =>
 
-  case class RouteWithLineNumber(r: Route, i: Option[Int])
+  case class RouteWithLineNumber(r: Route, i: Option[Int], isWs: Boolean = false)
 
   private val pool = ClassPool.getDefault
 
@@ -51,15 +53,15 @@ trait RoutePrinting {
   }
 
   def printRoute(context: String = "", r: RouteWithLineNumber, out: Appendable): Unit = r match {
-    case RouteWithLineNumber(RegexRoute(method, pattern, resp), ln) if method != Routings.HEAD => out.append(printRoute(method, context + pattern.toString(), resp, ln))
-    case RouteWithLineNumber(PathParamsRoute(method, pattern, resp), ln) if method != Routings.HEAD => out.append(printRoute(method, context + pattern, resp, ln))
+    case RouteWithLineNumber(RegexRoute(method, pattern, resp), ln, _) if method != Routings.HEAD => out.append(printRoute(method, context + pattern.toString(), resp, ln, isWs = false))
+    case RouteWithLineNumber(PathParamsRoute(method, pattern, resp), ln, isWs) if method != Routings.HEAD => out.append(printRoute(method, context + pattern, resp, ln, isWs))
     case _ => //noop
   }
 
-  private def printRoute(method: Routings.HttpMethod, pattern: String, resp: (Request) => HttpResp, ln: Option[Int]): String = {
+  private def printRoute(method: Routings.HttpMethod, pattern: String, resp: (Request) => HttpResp, ln: Option[Int], isWs: Boolean): String = {
     val clazz: Class[_ <: (Request) => HttpResp] = resp.getClass
     val enclosingClassName = s"${clazz.getName.split("\\$\\$")(0).split("\\.").reverse.head}"
-    s"${method.toString.padTo(4, ' ')} ${pattern.toString.padTo(32, ' ')} -> ${clazz.getPackage.getName} ($enclosingClassName.scala:${ln.getOrElse("?")})\n"
+    s"${(if (isWs) "WS" else method.toString).padTo(6, ' ')} ${pattern.toString.padTo(32, ' ')} -> ${clazz.getPackage.getName} ($enclosingClassName.scala:${ln.getOrElse("?")})\n"
   }
 
   def hackOutLineNumbers(allRoutes: Seq[(String, Routes)]): Seq[(String, RouteWithLineNumber)] = {
@@ -109,25 +111,22 @@ trait RoutePrinting {
       case NonFatal(e) => None
     }
 
-    val buffer: Seq[(String, RouteWithLineNumber)] = {
-      for {
-        (cxt, rss: Routes) <- allRoutes
-        realRss <- {
-          rss match {
-            case routes: AggregateRoutes =>
-              routes.controllers
-            case _ =>
-              Seq(rss)
-          }
+    for {
+      (cxt, rss: Routes) <- allRoutes
+      realRss <- {
+        rss match {
+          case routes: AggregateRoutes =>
+            routes.controllers
+          case _ =>
+            Seq(rss)
         }
-        rs: Route <- realRss.routes
-        if rs.method != Routings.HEAD
-      } yield rs match {
-        case r@RegexRoute(method, pattern, _) => cxt -> RouteWithLineNumber(r, lineNumber(pattern.pattern.toString, realRss.getClass))
-        case r@PathParamsRoute(method, pattern, _) => cxt -> RouteWithLineNumber(r, lineNumber(pattern, realRss.getClass))
       }
+      rs: Route <- realRss.routes
+      if rs.method != Routings.HEAD
+    } yield rs match {
+      case r@RegexRoute(_, pattern, _) => cxt -> RouteWithLineNumber(r, lineNumber(pattern.pattern.toString, realRss.getClass))
+      case r@PathParamsRoute(_, pattern, _) if realRss.isInstanceOf[WebSocketRoutes] => cxt -> RouteWithLineNumber(r, lineNumber(pattern, realRss.asInstanceOf[WebSocketRoutes].containingClazz), isWs = true) //orrible hack for web sockets
+      case r@PathParamsRoute(_, pattern, _) => cxt -> RouteWithLineNumber(r, lineNumber(pattern, realRss.getClass))
     }
-
-    buffer
   }
 }

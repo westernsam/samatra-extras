@@ -16,7 +16,8 @@ resolvers += "jitpack" at "https://jitpack.io"
 
 libraryDependencies ++=
   Seq(
-    "com.github.springernature" %% "samatra" % "v1.4",
+    "com.github.springernature.samatra" %% "samatra" % "v1.5.0",
+    "com.github.springernature.samatra" %% "samatra-websockets" % "v1.5.0",
 
     "org.eclipse.jetty" % "jetty-webapp" % jettyVersion,
     "org.eclipse.jetty" % "jetty-server" % jettyVersion,
@@ -27,7 +28,8 @@ libraryDependencies ++=
     "org.eclipse.jetty" % "jetty-servlets" % jettyVersion,
     "org.eclipse.jetty" % "jetty-util" % jettyVersion,
     "org.eclipse.jetty" % "jetty-jmx" % jettyVersion,
-    "org.eclipse.jetty.websocket" % "websocket-server" % jettyVersion,
+
+    "org.eclipse.jetty.websocket" % "javax-websocket-server-impl" % jettyVersion,
 
     "org.slf4j" % "slf4j-api" % "1.7.23",
     "com.samskivert" % "jmustache" % "1.12",
