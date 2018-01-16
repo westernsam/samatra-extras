@@ -6,6 +6,7 @@ import java.util.concurrent.{CountDownLatch, TimeUnit, TimeoutException}
 
 import com.springer.samatra.extras.Logger
 import com.springer.samatra.extras.asynchttp.AsyncHttpHelpers.StatusCode
+import io.netty.handler.codec.http.HttpHeaders
 import org.asynchttpclient.AsyncHandler.State
 import org.asynchttpclient.AsyncHandler.State._
 import org.asynchttpclient.{AsyncHandler, _}
@@ -84,8 +85,8 @@ class ByteStream(out: PipedOutputStream, latch: CountDownLatch, statusCodeSetter
     state
   }
 
-  override def onHeadersReceived(headers: HttpResponseHeaders): AsyncHandler.State = {
-    headers.getHeaders.iterator().asScala.foreach(header => log.debug(header.toString))
+  override def onHeadersReceived(headers: HttpHeaders): AsyncHandler.State = {
+    headers.entries().iterator().asScala.foreach(header => log.debug(s"${header.getKey}=${header.getValue}"))
     state
   }
 }

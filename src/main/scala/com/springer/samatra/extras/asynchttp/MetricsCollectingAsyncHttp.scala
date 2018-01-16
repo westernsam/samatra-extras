@@ -1,10 +1,12 @@
 package com.springer.samatra.extras.asynchttp
 
 import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
+import java.util.function.Predicate
 
 import com.springer.samatra.extras.Logger
 import com.springer.samatra.extras.http.URI
 import com.springer.samatra.extras.metrics.{MetricsHandler, MetricsStatsdClient}
+import io.netty.handler.codec.http.HttpHeaders
 import org.asynchttpclient.{AsyncHttpClient, DefaultAsyncHttpClientConfig, _}
 
 import scala.util.control.NonFatal
@@ -31,7 +33,7 @@ class TimerAsyncHandler[T](request: Request, statsD: MetricsStatsdClient, metric
     delegate.onBodyPartReceived(bodyPart)
   }
 
-  override def onHeadersReceived(headers: HttpResponseHeaders): AsyncHandler.State = delegate.onHeadersReceived(headers)
+  override def onHeadersReceived(headers: HttpHeaders): AsyncHandler.State = delegate.onHeadersReceived(headers)
 
   override def onStatusReceived(responseStatus: HttpResponseStatus): AsyncHandler.State = {
     statusReceived.getAndSet(responseStatus)
@@ -107,4 +109,7 @@ class MetricsCollectingAsyncHttp(underlying: AsyncHttpClient, statsd: MetricsSta
 
   private def requestBuilder(prototype: Request): BoundRequestBuilder = new BoundRequestBuilder(this, prototype).setSignatureCalculator(signatureCalculatorRef.get)
 
+  override def flushChannelPoolPartitions(predicate: Predicate[AnyRef]): Unit = underlying.flushChannelPoolPartitions(predicate)
+  override def getClientStats: ClientStats = underlying.getClientStats
+  override def getConfig: AsyncHttpClientConfig = underlying.getConfig
 }
