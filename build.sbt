@@ -36,7 +36,7 @@ libraryDependencies ++=
     "com.timgroup" % "java-statsd-client" % "3.1.0",
     "org.javassist" % "javassist" % "3.21.0-GA",
     "org.scala-lang.modules" %% "scala-xml" % "1.0.5",
-    "org.asynchttpclient" % "async-http-client" % "2.1.0",
+    "org.asynchttpclient" % "async-http-client" % "2.1.2",
 
     "org.scalatest" %% "scalatest" % "3.0.0" % "test"
   )
