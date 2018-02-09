@@ -2,29 +2,26 @@ package com.springer.samatra.extras.mustache.viewmodel
 
 import com.springer.samatra.extras.Logger
 
-trait ViewModelBuilder[C, E] {
-  def model(context: C): Either[E, Map[String, Any]]
+trait ViewModelBuilder[C] {
+  def model(context: C): Either[Exception, Map[String, Any]]
 }
 
-trait AggregateViewModelBuilder[C, E] extends ViewModelBuilder[C, E] {
-  def ++(vmb: Seq[ViewModelBuilder[_ >: C, E]]): AggregateViewModelBuilder[C, E] =
-    new ConcreteAggregateViewModelBuilder[C, E](this +: vmb)
+final class AggregateViewModelBuilder[C](builders: Seq[ViewModelBuilder[_ >: C]]) extends ViewModelBuilder[C] with Logger {
+  private val emptyViewModel: Either[Exception, Map[String, Any]] = Right(Map[String, Any]())
 
-  def +(vmb: ViewModelBuilder[_ >: C, E]): AggregateViewModelBuilder[C, E] =
-    new ConcreteAggregateViewModelBuilder[C, E](Seq(this,vmb))
-}
+  def ++(vmb: Seq[ViewModelBuilder[_ >: C]]): AggregateViewModelBuilder[C] =
+    new AggregateViewModelBuilder[C](this +: vmb)
 
+  def +(vmb: ViewModelBuilder[_ >: C]): AggregateViewModelBuilder[C] =
+    new AggregateViewModelBuilder[C](Seq(this, vmb))
 
-final class ConcreteAggregateViewModelBuilder[C, E](builders: Seq[ViewModelBuilder[_ >: C, E]]) extends AggregateViewModelBuilder[C, E] with Logger {
-  private val emptyViewModel: Either[E, Map[String, Any]] = Right(Map[String, Any]())
-
-  def model(context: C): Either[E, Map[String, Any]] =
+  def model(context: C): Either[Exception, Map[String, Any]] =
     builders.foldLeft(emptyViewModel) {
       case (Right(viewModel), builder) =>
-        builder.model(context).map{ m =>
+        builder.model(context).map { m =>
 
           val clashingKeys = m.keySet.intersect(viewModel.keySet)
-          if(clashingKeys.nonEmpty)
+          if (clashingKeys.nonEmpty)
             log.error(
               s"Keys clash when aggregating: $clashingKeys. The clashing entries in the individual model will be ignored.\n" +
                 s"Individual model: $m\n" +

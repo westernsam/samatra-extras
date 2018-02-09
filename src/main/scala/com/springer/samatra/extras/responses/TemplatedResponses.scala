@@ -6,13 +6,14 @@ import java.time.format.DateTimeFormatter
 import java.util
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Function
-import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 
 import com.samskivert.mustache.Mustache.{Compiler, Lambda}
 import com.samskivert.mustache.{Mustache, Template}
+import com.springer.samatra.extras.PrintStackTrace
+import com.springer.samatra.extras.mustache.viewmodel.ViewModelBuilder
 import com.springer.samatra.routing.Routings.HttpResp
 import com.springer.samatra.routing.StandardResponses.{Halt, Html}
-import com.springer.samatra.extras.PrintStackTrace
+import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 
 import scala.collection.JavaConverters._
 
@@ -24,6 +25,29 @@ trait TemplateRenderer {
 case class ViewRenderingError(exception: Throwable) extends PrintStackTrace
 
 case class NonLeafFormattingError(branch: java.util.Map[_, _]) extends RuntimeException(s"Only leaves can be formatted, but we got '$branch'")
+
+sealed abstract class DocumentRendererError
+object DocumentRendererError {
+  final case class ViewModelBuilding(error: Exception) extends DocumentRendererError
+  final case class ViewRendering(error: ViewRenderingError) extends DocumentRendererError
+}
+
+case class ViewModelTemplateResponse[C, E](templateName: String, viewModel: ViewModelBuilder[C], context: C, onError: Throwable => HttpResp = err => Halt(500, Some(err)))(implicit val renderer: TemplateRenderer) extends HttpResp {
+  override def process(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
+    val httpResp = {
+      for {
+        model <- viewModel.model(context).left.map(DocumentRendererError.ViewModelBuilding)
+        rendered <- renderer.rendered(templateName, model).left.map(DocumentRendererError.ViewRendering)
+      } yield Html(rendered)
+    } match {
+      case Right(result) => result
+      case Left(DocumentRendererError.ViewModelBuilding(ex)) => onError(ex)
+      case Left(DocumentRendererError.ViewRendering(ViewRenderingError(ex))) => onError(ex)
+    }
+
+    httpResp.process(req, resp)
+  }
+}
 
 case class TemplateResponse(templateName: String, model: Map[String, Any], onError: Throwable => HttpResp = err => Halt(500, Some(err)))(implicit val renderer: TemplateRenderer) extends HttpResp {
   override def process(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
@@ -42,7 +66,7 @@ case class TemplateResponse(templateName: String, model: Map[String, Any], onErr
 
 class MustacheRenderer(globals: Map[String, Any], templateReader: String => Reader, enableCache: Boolean, extraLeafFormatters: PartialFunction[Any, Any]*) extends TemplateRenderer {
 
-  private implicit val leafFormatters: PartialFunction[Any, Any] = MustacheRenderer.compose(extraLeafFormatters :+ MustacheRenderer.noMatch:_*)
+  private implicit val leafFormatters: PartialFunction[Any, Any] = MustacheRenderer.compose(extraLeafFormatters :+ MustacheRenderer.noMatch: _*)
 
   private val templates = new ConcurrentHashMap[String, Template]()
   private val mustacheCompiler: Compiler = Mustache.compiler()
@@ -129,13 +153,13 @@ object MustacheRenderer {
     }
   }
 
-  def compose[T, R] (pfs: PartialFunction[T, R]*) : PartialFunction[T, R] = pfs.reduce(_.orElse(_))
+  def compose[T, R](pfs: PartialFunction[T, R]*): PartialFunction[T, R] = pfs.reduce(_.orElse(_))
 
-  def zonedDateTimeRenderer(df: DateTimeFormatter) : PartialFunction[Any, Any] = {
-    case d:ZonedDateTime => df.format(d)
+  def zonedDateTimeRenderer(df: DateTimeFormatter): PartialFunction[Any, Any] = {
+    case d: ZonedDateTime => df.format(d)
   }
 
-  val noMatch : PartialFunction[Any, Any] = {
+  val noMatch: PartialFunction[Any, Any] = {
     case obj => throw new IllegalArgumentException(s"Don't know how to java-ise $obj of type ${obj.getClass.getSimpleName}")
   }
 
@@ -162,6 +186,7 @@ object MustacheRenderer {
     }
 
     def publicFields(obj: Product) = obj.getClass.getDeclaredFields.filterNot(_.getName == "$outer")
+
     def isCaseClass(obj: Product) = publicFields(obj).length == obj.productArity
 
     if (isCaseClass(caseClass))
