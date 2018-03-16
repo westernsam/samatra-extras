@@ -77,6 +77,8 @@ class MetricsCollectingAsyncHttp(underlying: AsyncHttpClient, statsd: MetricsSta
 
   val signatureCalculatorRef: AtomicReference[SignatureCalculator] = new AtomicReference[SignatureCalculator]()
 
+  override def prepare(method: String, url: String): BoundRequestBuilder = requestBuilder(method, url)
+
   override def preparePatch(url: String): BoundRequestBuilder = requestBuilder("PATCH", url)
   override def preparePost(url: String): BoundRequestBuilder = requestBuilder("POST", url)
   override def prepareDelete(url: String): BoundRequestBuilder = requestBuilder("DELETE", url)
