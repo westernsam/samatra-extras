@@ -1,7 +1,7 @@
 samatra-extras [![Build Status](https://travis-ci.org/springernature/samatra-extras.svg?branch=master)](https://travis-ci.org/springernature/samatra-extras) [![](https://jitpack.io/v/springernature/samatra-extras_2.12.svg)](https://jitpack.io/#springernature/samatra-extras_2.12)
 ------------
 
-[Samatra](https://github.com/springernature/samatra) with batteries included. 
+[Samatra](https://github.com/springernature/samatra) with batteries included. Documentation [here](https://github.com/springernature/samatra-extras/wiki)
 
 The aim of Samatra is to have as few dependencies as possible - if fact it only depends on the servlet-api.jar 
 Samatra-extras adds more dependencies but offers more out of the box. This includes:
