@@ -1,42 +1,57 @@
+val jettyVersion = "9.4.10.v20180503"
 
 name := "samatra-extras"
 
-organization := "com.springer"
+lazy val commonSettings = Seq(
+  organization := "com.springer",
+  version := Option(System.getenv("GO_PIPELINE_LABEL")).getOrElse("LOCAL"),
+  scalaVersion := "2.12.3",
+  scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-Xfatal-warnings", "-Xlint"),
+  resolvers += ("Local Ivy Repository" at "file:///" + Path.userHome.absolutePath + "/.ivy2/cache"),
+  resolvers += "jitpack" at "https://jitpack.io",
+  libraryDependencies ++=
+    Seq(
+      "com.github.springernature.samatra" %% "samatra" % "v1.5.0",
 
-version := Option(System.getenv("GO_PIPELINE_LABEL")).getOrElse("LOCAL")
+      "org.eclipse.jetty" % "jetty-webapp" % jettyVersion,
+      "org.eclipse.jetty" % "jetty-server" % jettyVersion,
+      "org.eclipse.jetty" % "jetty-http" % jettyVersion,
+      "org.eclipse.jetty" % "jetty-io" % jettyVersion,
+      "org.eclipse.jetty" % "jetty-security" % jettyVersion,
+      "org.eclipse.jetty" % "jetty-servlet" % jettyVersion,
+      "org.eclipse.jetty" % "jetty-servlets" % jettyVersion,
+      "org.eclipse.jetty" % "jetty-util" % jettyVersion,
+      "org.eclipse.jetty" % "jetty-jmx" % jettyVersion,
 
-scalaVersion := "2.12.6"
+      "org.slf4j" % "slf4j-api" % "1.7.25",
+      "org.asynchttpclient" % "async-http-client" % "2.4.7",
+    )
+)
 
-scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-Xfatal-warnings", "-Xlint")
+lazy val `samatra-extras-core` = project.in(file("samatra-extras-core"))
+  .settings(commonSettings: _*)
 
-val jettyVersion = "9.4.10.v20180503"
+lazy val `samatra-extras-mustache` = project.in(file("samatra-extras-mustache"))
+  .settings(commonSettings: _*)
+  .dependsOn(`samatra-extras-core`)
 
-resolvers += ("Local Ivy Repository" at "file:///" + Path.userHome.absolutePath + "/.ivy2/cache")
-resolvers += "jitpack" at "https://jitpack.io"
+lazy val `samatra-extras-xml` = project.in(file("samatra-extras-xml"))
+  .settings(commonSettings: _*)
+  .dependsOn(`samatra-extras-core`)
 
-libraryDependencies ++=
-  Seq(
-    "com.github.springernature.samatra" %% "samatra" % "v1.5.0",
-    "com.github.springernature.samatra" %% "samatra-websockets" % "v1.5.0",
+lazy val `samatra-extras-routeprinting` = project.in(file("samatra-extras-routeprinting"))
+  .settings(commonSettings: _*)
+  .dependsOn(`samatra-extras-core`)
 
-    "org.eclipse.jetty" % "jetty-webapp" % jettyVersion,
-    "org.eclipse.jetty" % "jetty-server" % jettyVersion,
-    "org.eclipse.jetty" % "jetty-http" % jettyVersion,
-    "org.eclipse.jetty" % "jetty-io" % jettyVersion,
-    "org.eclipse.jetty" % "jetty-security" % jettyVersion,
-    "org.eclipse.jetty" % "jetty-servlet" % jettyVersion,
-    "org.eclipse.jetty" % "jetty-servlets" % jettyVersion,
-    "org.eclipse.jetty" % "jetty-util" % jettyVersion,
-    "org.eclipse.jetty" % "jetty-jmx" % jettyVersion,
+lazy val `samatra-extras-statsd` = project.in(file("samatra-extras-statsd"))
+  .settings(commonSettings: _*)
+  .dependsOn(`samatra-extras-core`, `samatra-extras-routeprinting`)
 
-    "org.eclipse.jetty.websocket" % "javax-websocket-server-impl" % jettyVersion,
+lazy val `samatra-extras-websockets` = project.in(file("samatra-extras-websockets"))
+  .settings(commonSettings: _*)
+  .dependsOn(`samatra-extras-core`, `samatra-extras-routeprinting`)
 
-    "org.slf4j" % "slf4j-api" % "1.7.25",
-    "com.samskivert" % "jmustache" % "1.14",
-    "com.timgroup" % "java-statsd-client" % "3.1.0",
-    "org.javassist" % "javassist" % "3.22.0-GA",
-    "org.scala-lang.modules" %% "scala-xml" % "1.1.0",
-    "org.asynchttpclient" % "async-http-client" % "2.4.7",
+val `samatra-extras`: sbt.Project = project.in(file("."))
+  .settings(commonSettings: _*)
+  .aggregate(`samatra-extras-core`, `samatra-extras-mustache`, `samatra-extras-xml`, `samatra-extras-statsd`, `samatra-extras-routeprinting`, `samatra-extras-websockets`)
 
-    "org.scalatest" %% "scalatest" % "3.0.5" % "test"
-  )

@@ -4,18 +4,37 @@ samatra-extras [![Build Status](https://travis-ci.org/springernature/samatra-ext
 [Samatra](https://github.com/springernature/samatra) with batteries included. Documentation [here](https://github.com/springernature/samatra-extras/wiki)
 
 The aim of Samatra is to have as few dependencies as possible - if fact it only depends on the servlet-api.jar 
-Samatra-extras adds more dependencies but offers more out of the box. This includes:
+Samatra-extras adds more dependencies but offers more out of the box. Specifically it depends on
+
+- Samatra v1.5.0
+- Jetty 9.4.10.v20180503
+- Async Http Client 2.4.7
+- SLF4J 1.7.25
+
+This provides helpers for:
 
 - Jetty web server configuration
 - Gzipping
-- Logging with logback
-- Json, XML and Templated (Mustache) responses
-- Statsd metrics - web responses and jvm
-- Route printing on start-up (integrates nicely with Intellij) 
+- Logging
+- AsyncHttpClient to scala Future
+
+Other samatra extra libraries exist which add further dependencies:
+
+- samatra-extras-xml - XML responses 
+    - ```"org.scala-lang.modules" %% "scala-xml" % "1.1.0"```
+- samatra-extras-mustache - Mustache responses
+    - ```"com.samskivert" % "jmustache" % "1.14"```
+- samatra-extras-statsd - Statsd metrics - web responses and jvm
+    - ```"com.timgroup" % "java-statsd-client" % "3.1.0"```
+- samatra-extras-routeprinting - route printing on start-up (integrates nicely with Intellij)
+    - ```"org.javassist" % "javassist" % "3.22.0-GA"```
+- samatra-extras-websockets - 
+    - ```"com.github.springernature.samatra" %% "samatra-websockets" % "v1.5.0"```
+    - ```"org.eclipse.jetty.websocket" % "javax-websocket-server-impl" % 9.4.10.v20180503```
 
 ## Supported platforms
 - Scala 2.12
-- Jetty 9.4.8.v20171121
+- Jetty 9.4.10.v20180503
 
 ## How to install
 - sbt: 

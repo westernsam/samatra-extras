@@ -1,0 +1,1 @@
+libraryDependencies += "com.timgroup" % "java-statsd-client" % "3.1.0"
