@@ -45,7 +45,7 @@ lazy val `samatra-extras-routeprinting` = project.in(file("samatra-extras-routep
 
 lazy val `samatra-extras-statsd` = project.in(file("samatra-extras-statsd"))
   .settings(commonSettings: _*)
-  .dependsOn(`samatra-extras-core`, `samatra-extras-routeprinting`)
+  .dependsOn(`samatra-extras-core`)
 
 lazy val `samatra-extras-websockets` = project.in(file("samatra-extras-websockets"))
   .settings(commonSettings: _*)

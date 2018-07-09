@@ -1,7 +1,8 @@
 package com.springer.samatra.extras.websockets
 
+import com.springer.samatra.extras.core.jetty.{RouteAndContext, WebappContextHandler}
 import com.springer.samatra.extras.routeprinting.RoutePrinting.RouteWithLineNumber
-import com.springer.samatra.extras.routeprinting.{RouteAndContext, RoutePrinting, WebappContextHandler}
+import com.springer.samatra.extras.routeprinting.RoutePrinting
 import com.springer.samatra.routing.{Request, Routings}
 import com.springer.samatra.routing.Routings._
 import com.springer.samatra.websockets.WsRoutings.{WSController, WsRoutes}

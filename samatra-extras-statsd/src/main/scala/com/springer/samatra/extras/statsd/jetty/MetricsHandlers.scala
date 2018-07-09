@@ -1,6 +1,6 @@
 package com.springer.samatra.extras.statsd.jetty
 
-import com.springer.samatra.extras.routeprinting.WebappContextHandler
+import com.springer.samatra.extras.core.jetty.WebappContextHandler
 import com.springer.samatra.extras.statsd.MetricsStatsdClient
 import javax.servlet.http.HttpServletRequest
 import org.eclipse.jetty.server.handler.AbstractHandler

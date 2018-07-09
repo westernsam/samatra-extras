@@ -2,7 +2,7 @@ package com.springer.samatra.extras.websockets
 
 import java.io.StringWriter
 
-import com.springer.samatra.extras.routeprinting.RouteAndContext
+import com.springer.samatra.extras.core.jetty.RouteAndContext
 import com.springer.samatra.routing.Routings._
 import com.springer.samatra.routing.StandardResponses.Implicits.fromString
 import com.springer.samatra.routing.{Request, Routings}

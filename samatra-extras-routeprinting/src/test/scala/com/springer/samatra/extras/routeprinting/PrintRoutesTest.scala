@@ -2,6 +2,7 @@ package com.springer.samatra.extras.routeprinting
 
 import java.io.StringWriter
 
+import com.springer.samatra.extras.core.jetty.RouteAndContext
 import com.springer.samatra.routing.Routings
 import com.springer.samatra.routing.Routings.{AggregateRoutes, Controller}
 import org.scalatest.FunSpec
@@ -23,7 +24,7 @@ class PrintRoutesTest extends FunSpec {
     }.printRoutesTo(out)
 
     out.toString.trim shouldBe
-      """GET    /context/abc                     -> com.springer.samatra.extras.routeprinting (PrintRoutesTest$UnderTest.scala:14)
-        |POST   /context/cba                     -> com.springer.samatra.extras.routeprinting (PrintRoutesTest$UnderTest.scala:15)""".stripMargin
+      """GET    /context/abc                     -> com.springer.samatra.extras.routeprinting (PrintRoutesTest$UnderTest.scala:15)
+        |POST   /context/cba                     -> com.springer.samatra.extras.routeprinting (PrintRoutesTest$UnderTest.scala:16)""".stripMargin
   }
 }
