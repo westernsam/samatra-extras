@@ -1,0 +1,1 @@
+libraryDependencies += "com.newrelic.agent.java" % "newrelic-api" % "4.2.0"
