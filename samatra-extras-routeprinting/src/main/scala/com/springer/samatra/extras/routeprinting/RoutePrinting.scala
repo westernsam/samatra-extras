@@ -26,8 +26,8 @@ trait RoutePrinting {
 
   def printRoutesTo(w: Appendable = new OutputStreamWriter(System.out)): this.type = {
     for {
-      (context, r) <- routesWithLineNumbers
-    } r.printRoute(context, w)
+      (servletPath, r) <- routesWithLineNumbers
+    } r.printRoute(getContextPath, servletPath, w)
     this
   }
 }
@@ -35,14 +35,14 @@ trait RoutePrinting {
 object RoutePrinting {
 
   trait RouteWithLineNumber {
-    def printRoute(context: String = "", out: Appendable): Unit
+    def printRoute(context: String, servlet: String = "", out: Appendable): Unit
   }
 
   case class ServletRouteWithLineNumber(r: Route, i: Option[Int]) extends RouteWithLineNumber {
 
-    def printRoute(context: String = "", out: Appendable): Unit = r match {
-      case RegexRoute(method, pattern, resp) if method != Routings.HEAD => out.append(printRoute(method, context + pattern.toString(), resp, i))
-      case PathParamsRoute(method, pattern, resp) if method != Routings.HEAD => out.append(printRoute(method, context + pattern, resp, i))
+    def printRoute(contextPath: String, servletPath: String = "", out: Appendable): Unit = r match {
+      case RegexRoute(method, pattern, resp) if method != Routings.HEAD => out.append(printRoute(method, contextPath + servletPath + pattern.toString(), resp, i))
+      case PathParamsRoute(method, pattern, resp) if method != Routings.HEAD => out.append(printRoute(method, contextPath + servletPath + pattern, resp, i))
       case _ => //noop
     }
 

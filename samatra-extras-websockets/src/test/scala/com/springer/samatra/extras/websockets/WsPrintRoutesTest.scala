@@ -27,17 +27,18 @@ class WsPrintRoutesTest extends FunSpec {
     new RouteAndContext with WSRoutePrinting {
       override def routesWithContext: Seq[(String, Routings.Routes)] = {
         val ws = new Ws()
-        Seq("/context" ->
+        Seq("/servlet" ->
           new AggregateRoutes(
             new UnderTest,
             new WebSocketRoutes(ws.routes.map(r => PathParamsRoute(GET, r.path, r.socket.asInstanceOf[Function[Request, HttpResp]])), ws.getClass))
         )
       }
+      override def getContextPath: String = "/context"
     }.printRoutesTo(out)
 
     out.toString.trim shouldBe
-      """GET    /context/abc                     -> com.springer.samatra.extras.websockets (WsPrintRoutesTest$UnderTest.scala:16)
-        |POST   /context/cba                     -> com.springer.samatra.extras.websockets (WsPrintRoutesTest$UnderTest.scala:17)
-        |WS     /context/ws                      -> com.springer.samatra.extras.websockets (WsPrintRoutesTest$Ws.scala:21)""".stripMargin
+      """GET    /context/servlet/abc             -> com.springer.samatra.extras.websockets (WsPrintRoutesTest$UnderTest.scala:16)
+        |POST   /context/servlet/cba             -> com.springer.samatra.extras.websockets (WsPrintRoutesTest$UnderTest.scala:17)
+        |WS     /context/servlet/ws              -> com.springer.samatra.extras.websockets (WsPrintRoutesTest$Ws.scala:21)""".stripMargin
   }
 }

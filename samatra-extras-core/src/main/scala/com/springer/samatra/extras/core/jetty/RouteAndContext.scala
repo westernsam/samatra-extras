@@ -4,4 +4,5 @@ import com.springer.samatra.routing.Routings.Routes
 
 trait RouteAndContext {
   def routesWithContext: Seq[(String, Routes)]
+  def getContextPath: String
 }

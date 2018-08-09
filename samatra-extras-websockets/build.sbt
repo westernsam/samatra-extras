@@ -1,4 +1,4 @@
-val jettyVersion = "9.4.10.v20180503"
+val jettyVersion = "9.4.11.v20180605"
 
 libraryDependencies ++= Seq(
   "com.github.springernature.samatra" %% "samatra-websockets" % "v1.5.0",

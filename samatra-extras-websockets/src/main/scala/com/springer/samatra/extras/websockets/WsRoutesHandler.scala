@@ -37,8 +37,8 @@ trait WsRoutesHandler {
 
 case class WSRouteWithLineNumber(r: Route, i: Option[Int]) extends RouteWithLineNumber {
 
-  def printRoute(context: String = "", out: Appendable): Unit = r match {
-    case PathParamsRoute(method, pattern, resp) if method != Routings.HEAD => out.append(printRoute(method, context + pattern, resp, i))
+  def printRoute(contextPath:String, servletPath: String = "", out: Appendable): Unit = r match {
+    case PathParamsRoute(method, pattern, resp) if method != Routings.HEAD => out.append(printRoute(method, contextPath + servletPath + pattern, resp, i))
     case _ => //noop
   }
 

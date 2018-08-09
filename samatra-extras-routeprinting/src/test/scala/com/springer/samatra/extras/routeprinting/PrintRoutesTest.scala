@@ -20,11 +20,12 @@ class PrintRoutesTest extends FunSpec {
     val out: Appendable = new StringWriter()
 
     new RouteAndContext with RoutePrinting {
-      override def routesWithContext: Seq[(String, Routings.Routes)] = Seq("/context" -> new AggregateRoutes(new UnderTest))
+      override def routesWithContext: Seq[(String, Routings.Routes)] = Seq("/servlet" -> new AggregateRoutes(new UnderTest))
+      override def getContextPath: String = "/abc"
     }.printRoutesTo(out)
 
     out.toString.trim shouldBe
-      """GET    /context/abc                     -> com.springer.samatra.extras.routeprinting (PrintRoutesTest$UnderTest.scala:15)
-        |POST   /context/cba                     -> com.springer.samatra.extras.routeprinting (PrintRoutesTest$UnderTest.scala:16)""".stripMargin
+      """GET    /abc/servlet/abc                 -> com.springer.samatra.extras.routeprinting (PrintRoutesTest$UnderTest.scala:15)
+        |POST   /abc/servlet/cba                 -> com.springer.samatra.extras.routeprinting (PrintRoutesTest$UnderTest.scala:16)""".stripMargin
   }
 }
