@@ -1,8 +1,9 @@
 package com.springer.samatra.extras.statsd.jetty
 
+import com.springer.samatra.extras.core.jetty.RouteAndContext
 import com.springer.samatra.extras.statsd.MetricsStatsdClient
 import com.springer.samatra.extras.statsd.jetty.MetricsHandler._
-import com.springer.samatra.routing.Routings.{PathParamsRoute, RegexRoute, Routes}
+import com.springer.samatra.routing.Routings.{PathParamsRoute, RegexRoute}
 import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 import javax.servlet.{AsyncEvent, AsyncListener, ServletResponse}
 import org.eclipse.jetty.server.handler.{AbstractHandler, HandlerWrapper}
@@ -55,15 +56,16 @@ class MetricsHandler(statsdClient: MetricsStatsdClient, handler: AbstractHandler
 }
 
 
-class RouteMetricsHandler(routesWithContext: Seq[(String, Routes)], statsdClient: MetricsStatsdClient, handler: AbstractHandler, ignore: HttpServletRequest => Boolean = isInternal, pathTransformer: String => String = _
+class RouteMetricsHandler(routesWithContext: RouteAndContext, statsdClient: MetricsStatsdClient, handler: AbstractHandler, ignore: HttpServletRequest => Boolean = isInternal, pathTransformer: String => String = _
   .replaceAll("\\s+", "_")
   .replaceAll("\\/", "_")
   .replaceAll("[^a-zA-Z_\\-0-9]", "-")) extends BaseMetricsHandler(statsdClient, handler, ignore) {
 
   def record(req: Request, response: ServletResponse) {
 
-    val routeName: Option[(String, String)] = routesWithContext.flatMap { case (c, r) =>
+    val routeName: Option[(String, String)] = routesWithContext.routesWithContext.flatMap { case (c, r) =>
 
+      req.setContextPath(routesWithContext.getContextPath)
       req.setServletPath(c)
 
       val routeName: Option[String] = r.matching(req, response.asInstanceOf[HttpServletResponse]) match {
