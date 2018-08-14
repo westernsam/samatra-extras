@@ -59,6 +59,10 @@ lazy val `samatra-extras-cats` = project.in(file("samatra-extras-cats"))
   .settings(commonSettings: _*)
   .dependsOn(`samatra-extras-core`)
 
+lazy val `samatra-extras-auth` = project.in(file("samatra-extras-auth"))
+  .settings(commonSettings: _*)
+  .dependsOn(`samatra-extras-core`)
+
 val `samatra-extras`: sbt.Project = project.in(file("."))
   .settings(commonSettings: _*)
   .aggregate(
@@ -69,6 +73,7 @@ val `samatra-extras`: sbt.Project = project.in(file("."))
     `samatra-extras-routeprinting`,
     `samatra-extras-websockets`,
     `samatra-extras-newrelic`,
-    `samatra-extras-cats`
+    `samatra-extras-cats`,
+    `samatra-extras-auth`
   )
 
