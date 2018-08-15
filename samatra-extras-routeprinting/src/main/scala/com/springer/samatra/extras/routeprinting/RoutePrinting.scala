@@ -40,10 +40,13 @@ object RoutePrinting {
 
   case class ServletRouteWithLineNumber(r: Route, i: Option[Int]) extends RouteWithLineNumber {
 
-    def printRoute(contextPath: String, servletPath: String = "", out: Appendable): Unit = r match {
-      case RegexRoute(method, pattern, resp) if method != Routings.HEAD => out.append(printRoute(method, contextPath + servletPath + pattern.toString(), resp, i))
-      case PathParamsRoute(method, pattern, resp) if method != Routings.HEAD => out.append(printRoute(method, contextPath + servletPath + pattern, resp, i))
-      case _ => //noop
+    def printRoute(contextPath: String, servletPath: String = "", out: Appendable): Unit = {
+      val baseRoute = (if (contextPath == "/") "" else contextPath) + servletPath
+      r match {
+        case RegexRoute(method, pattern, resp) if method != Routings.HEAD => out.append(printRoute(method, baseRoute + pattern.toString(), resp, i))
+        case PathParamsRoute(method, pattern, resp) if method != Routings.HEAD => out.append(printRoute(method, baseRoute + pattern, resp, i))
+        case _ => //noop
+      }
     }
 
     private def printRoute(method: Routings.HttpMethod, pattern: String, resp: Request => HttpResp, ln: Option[Int]): String = {
@@ -63,6 +66,7 @@ object RoutePrinting {
 
   * */
   private val pool = ClassPool.getDefault
+
   def lineNumber(pattern: String, clazz: Class[_]): Option[Int] = try {
     val ctClazz: CtClass = pool.get(clazz.getName)
 

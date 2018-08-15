@@ -28,4 +28,17 @@ class PrintRoutesTest extends FunSpec {
       """GET    /abc/servlet/abc                 -> com.springer.samatra.extras.routeprinting (PrintRoutesTest$UnderTest.scala:15)
         |POST   /abc/servlet/cba                 -> com.springer.samatra.extras.routeprinting (PrintRoutesTest$UnderTest.scala:16)""".stripMargin
   }
+
+  it("prints routes with empty context route") {
+    val out: Appendable = new StringWriter()
+
+    new RouteAndContext with RoutePrinting {
+      override def routesWithContext: Seq[(String, Routings.Routes)] = Seq("/servlet" -> new AggregateRoutes(new UnderTest))
+      override def getContextPath: String = "/"
+    }.printRoutesTo(out)
+
+    out.toString.trim shouldBe
+      """GET    /servlet/abc                     -> com.springer.samatra.extras.routeprinting (PrintRoutesTest$UnderTest.scala:15)
+        |POST   /servlet/cba                     -> com.springer.samatra.extras.routeprinting (PrintRoutesTest$UnderTest.scala:16)""".stripMargin
+  }
 }
