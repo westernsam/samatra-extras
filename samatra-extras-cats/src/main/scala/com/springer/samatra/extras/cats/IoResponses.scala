@@ -16,7 +16,7 @@ object IoResponses {
   case class Timeout(t: Long)
   case class ResponseOnTimeout(statusCode: Int)
 
-  implicit class IoResponse[A](io: IO[A])(implicit rest: A => HttpResp, ex: ExecutionContext = ExecutionContext.global, timeout: Timeout = Timeout(500), responseOnTimeout: ResponseOnTimeout = ResponseOnTimeout(500)) extends HttpResp {
+  implicit class IoResponse[A](io: IO[A])(implicit rest: A => HttpResp, ex: ExecutionContext = ExecutionContext.global, timeout: Timeout = Timeout(500), responseOnTimeout: ResponseOnTimeout = ResponseOnTimeout(5000)) extends HttpResp {
     override def process(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
       val state = new AtomicReference[State](Running)
 
