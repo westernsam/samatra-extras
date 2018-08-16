@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicReference
 import org.eclipse.jetty.security.AbstractLoginService
 import org.eclipse.jetty.util.security.Credential
 
-case class JwtUser(username: String, application: String, cred: JwtCredentials = new JwtCredentials()) extends AbstractLoginService.UserPrincipal(username, cred) {
+case class TokenAuthenticatedUser(username: String, application: String, cred: JwtCredentials = new JwtCredentials()) extends AbstractLoginService.UserPrincipal(username, cred) {
   def roles(): Array[String] = cred.auth.get().appRoles(application)
 }
 
