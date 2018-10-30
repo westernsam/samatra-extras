@@ -16,7 +16,7 @@ object WebServer {
     * See:
     *   - http://stackoverflow.com/questions/3757289/tcp-option-so-linger-zero-when-its-required
     * */
-    connector.setSoLingerTime(1000)
+//    connector.setSoLingerTime(1000)
     connector.setAcceptQueueSize(25)
   }
 }

@@ -11,7 +11,7 @@ import scala.collection.mutable
 class WebappContextHandler extends ServletContextHandler with RouteAndContext {
   val routesWithContext: mutable.ArrayBuffer[(String, Routes)] = new mutable.ArrayBuffer[(String, Routes)]()
 
-  def addFilter(filter: Filter, path: String = "/*"): this.type = {
+  def addFilter(path: String = "/*", filter: Filter): this.type = {
     super.addFilter(new FilterHolder(filter), path, util.EnumSet.allOf(classOf[DispatcherType]))
     this
   }
