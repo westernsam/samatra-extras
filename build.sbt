@@ -11,7 +11,7 @@ lazy val commonSettings = Seq(
   resolvers += "jitpack" at "https://jitpack.io",
   libraryDependencies ++=
     Seq(
-      "com.github.springernature.samatra" %% "samatra" % "v1.5.1",
+      "com.github.springernature.samatra" %% "samatra" % "v1.5.2",
 
       "org.eclipse.jetty" % "jetty-webapp" % jettyVersion,
       "org.eclipse.jetty" % "jetty-server" % jettyVersion,
@@ -63,6 +63,10 @@ lazy val `samatra-extras-auth` = project.in(file("samatra-extras-auth"))
   .settings(commonSettings: _*)
   .dependsOn(`samatra-extras-core`)
 
+lazy val `samatra-extras-formbuilders` = project.in(file("samatra-extras-formbuilders"))
+  .settings(commonSettings: _*)
+  .dependsOn(`samatra-extras-core`)
+
 val `samatra-extras`: sbt.Project = project.in(file("."))
   .settings(commonSettings: _*)
   .aggregate(
@@ -74,6 +78,7 @@ val `samatra-extras`: sbt.Project = project.in(file("."))
     `samatra-extras-websockets`,
     `samatra-extras-newrelic`,
     `samatra-extras-cats`,
-    `samatra-extras-auth`
+    `samatra-extras-auth`,
+    `samatra-extras-formbuilders`
   )
 
