@@ -1,7 +1,7 @@
-samatra-extras [![Build Status](https://travis-ci.org/springernature/samatra-extras.svg?branch=master)](https://travis-ci.org/springernature/samatra-extras) [![](https://jitpack.io/v/springernature/samatra-extras_2.12.svg)](https://jitpack.io/#springernature/samatra-extras_2.12)
+samatra-extras [![](https://jitpack.io/v/westernsam/samatra-extras_2.12.svg)](https://jitpack.io/#westernsam/samatra-extras_2.12)
 ------------
 
-[Samatra](https://github.com/springernature/samatra) with batteries included. Documentation [here](https://github.com/springernature/samatra-extras/wiki)
+[Samatra](https://github.com/westernsam/samatra) with batteries included. Documentation [here](https://github.com/westernsam/samatra-extras/wiki)
 
 The aim of Samatra is to have as few dependencies as possible - if fact it only depends on the servlet-api.jar 
 Samatra-extras adds more dependencies but offers more out of the box. Specifically it depends on
@@ -29,7 +29,7 @@ Other samatra extra libraries exist which add further dependencies:
 - samatra-extras-routeprinting - route printing on start-up (integrates nicely with Intellij)
     - ```"org.javassist" % "javassist" % "3.22.0-GA"```
 - samatra-extras-websockets - 
-    - ```"com.github.springernature.samatra" %% "samatra-websockets" % "v1.5.0"```
+    - ```"com.github.westernsam.samatra" %% "samatra-websockets" % "v1.5.0"```
     - ```"org.eclipse.jetty.websocket" % "javax-websocket-server-impl" % 9.4.10.v20180503```
 
 ## Supported platforms
@@ -40,10 +40,10 @@ Other samatra extra libraries exist which add further dependencies:
 - sbt: 
 ```
 resolvers += "jitpack" at "https://jitpack.io",
-libraryDependencies += "com.github.springernature" %% "samatra-extras" % "v1.8.3"	
+libraryDependencies += "com.github.westernsam" %% "samatra-extras" % "v1.8.3"	
 ```
 
-You may also be interested in [samatra.g8](https://github.com/springernature/samatra.g8) which is a giter8 / sbt template for generating new samatra projects.
+You may also be interested in [samatra.g8](https://github.com/westernsam/samatra.g8) which is a giter8 / sbt template for generating new samatra projects.
  
 ## Licensing
 The MIT License (MIT)  http://opensource.org/licenses/MIT
@@ -54,4 +54,4 @@ Copyright © 2016, 2017 Springer Nature
 Submit issues and PR's to this github.
 
 ## How to use
-The easiest way to generate a new stub Samatra-extras project is to use the [samatra.g8](https://github.com/springernature/samatra.g8) template.
+The easiest way to generate a new stub Samatra-extras project is to use the [samatra.g8](https://github.com/westernsam/samatra.g8) template.

@@ -11,7 +11,7 @@ lazy val commonSettings = Seq(
   resolvers += "jitpack" at "https://jitpack.io",
   libraryDependencies ++=
     Seq(
-      "com.github.springernature.samatra" %% "samatra" % "v1.5.2",
+      "com.github.westernsam.samatra" %% "samatra" % "v1.0",
 
       "org.eclipse.jetty" % "jetty-webapp" % jettyVersion,
       "org.eclipse.jetty" % "jetty-server" % jettyVersion,
