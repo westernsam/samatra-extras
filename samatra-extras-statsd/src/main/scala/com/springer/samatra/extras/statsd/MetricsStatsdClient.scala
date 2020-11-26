@@ -5,9 +5,9 @@ import com.timgroup.statsd.StatsDClient
 
 
 trait MetricsStatsdClient {
-  def incrementCounter(name: String)
-  def gauge(name: String, value: Long)
-  def recordExecutionTime(name: String, duration: Long)
+  def incrementCounter(name: String): Unit
+  def gauge(name: String, value: Long): Unit
+  def recordExecutionTime(name: String, duration: Long): Unit
 }
 
 object MetricsStatsdClient extends Logger {

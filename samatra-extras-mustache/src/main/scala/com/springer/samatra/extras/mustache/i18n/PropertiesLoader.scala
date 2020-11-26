@@ -1,8 +1,7 @@
 package com.springer.samatra.extras.mustache.i18n
 
 import java.util.Properties
-
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters.DictionaryHasAsScala
 
 trait PropertiesLoader {
   def load : Map[String, String]
@@ -12,7 +11,7 @@ class ClasspathPropertiesLoader(path: String) extends PropertiesLoader {
   val load: Map[String, String] = {
     val properties = new Properties()
     properties.load(getClass.getResourceAsStream(path))
-    properties.asScala.toMap
+    properties.asScala.toMap.asInstanceOf[Map[String, String]]
   }
 }
 

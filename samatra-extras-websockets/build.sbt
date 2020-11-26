@@ -1,7 +1,7 @@
-val jettyVersion = "9.4.12.v20180830"
+val jettyVersion = "9.4.35.v20201120"
 
 libraryDependencies ++= Seq(
-  "com.github.springernature.samatra" %% "samatra-websockets" % "v1.5.2",
+  "com.github.westernsam.samatra" %% "samatra-websockets" % "v1.1",
   "org.eclipse.jetty.websocket" % "javax-websocket-server-impl" % jettyVersion,
-  "org.scalatest" %% "scalatest" % "3.0.5" % "test"
+  "org.scalatest" %% "scalatest" % "3.2.3" % "test"
 )

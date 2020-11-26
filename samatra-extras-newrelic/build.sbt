@@ -1,1 +1,1 @@
-libraryDependencies += "com.newrelic.agent.java" % "newrelic-api" % "4.2.0"
+libraryDependencies += "com.newrelic.agent.java" % "newrelic-api" % "6.2.1"

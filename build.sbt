@@ -1,17 +1,17 @@
-val jettyVersion = "9.4.12.v20180830"
+val jettyVersion = "9.4.35.v20201120"
 
 name := "samatra-extras"
 
 lazy val commonSettings = Seq(
   organization := "com.springer",
   version := Option(System.getenv("GO_PIPELINE_LABEL")).getOrElse("LOCAL"),
-  scalaVersion := "2.12.3",
+  scalaVersion := "2.13.4",
   scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-Xfatal-warnings", "-Xlint"),
   resolvers += ("Local Ivy Repository" at "file:///" + Path.userHome.absolutePath + "/.ivy2/cache"),
   resolvers += "jitpack" at "https://jitpack.io",
   libraryDependencies ++=
     Seq(
-      "com.github.westernsam.samatra" %% "samatra" % "v1.0",
+      "com.github.westernsam.samatra" %% "samatra" % "v1.1",
 
       "org.eclipse.jetty" % "jetty-webapp" % jettyVersion,
       "org.eclipse.jetty" % "jetty-server" % jettyVersion,
@@ -23,8 +23,8 @@ lazy val commonSettings = Seq(
       "org.eclipse.jetty" % "jetty-util" % jettyVersion,
       "org.eclipse.jetty" % "jetty-jmx" % jettyVersion,
 
-      "org.slf4j" % "slf4j-api" % "1.7.25",
-      "org.asynchttpclient" % "async-http-client" % "2.5.2"
+      "org.slf4j" % "slf4j-api" % "1.7.30",
+      "org.asynchttpclient" % "async-http-client" % "2.12.1"
     )
 )
 
@@ -63,10 +63,6 @@ lazy val `samatra-extras-auth` = project.in(file("samatra-extras-auth"))
   .settings(commonSettings: _*)
   .dependsOn(`samatra-extras-core`)
 
-lazy val `samatra-extras-formbuilders` = project.in(file("samatra-extras-formbuilders"))
-  .settings(commonSettings: _*)
-  .dependsOn(`samatra-extras-core`)
-
 val `samatra-extras`: sbt.Project = project.in(file("."))
   .settings(commonSettings: _*)
   .aggregate(
@@ -78,7 +74,6 @@ val `samatra-extras`: sbt.Project = project.in(file("."))
     `samatra-extras-websockets`,
     `samatra-extras-newrelic`,
     `samatra-extras-cats`,
-    `samatra-extras-auth`,
-    `samatra-extras-formbuilders`
+    `samatra-extras-auth`
   )
 

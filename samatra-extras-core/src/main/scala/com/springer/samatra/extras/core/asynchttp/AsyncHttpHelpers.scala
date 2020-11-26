@@ -43,7 +43,7 @@ object AsyncHttpHelpers {
           }
         },
         new java.util.concurrent.Executor {
-          def execute(runnable: Runnable) {
+          def execute(runnable: Runnable) :Unit = {
             executor.execute(runnable)
           }
         }

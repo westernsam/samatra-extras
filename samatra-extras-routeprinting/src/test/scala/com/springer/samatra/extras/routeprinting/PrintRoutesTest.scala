@@ -1,15 +1,14 @@
 package com.springer.samatra.extras.routeprinting
 
 import java.io.StringWriter
-
 import com.springer.samatra.extras.core.jetty.RouteAndContext
 import com.springer.samatra.routing.Routings
 import com.springer.samatra.routing.Routings.{AggregateRoutes, Controller}
-import org.scalatest.FunSpec
 import com.springer.samatra.routing.StandardResponses.Implicits.fromString
-import org.scalatest.Matchers._
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers._
 
-class PrintRoutesTest extends FunSpec {
+class PrintRoutesTest extends AnyFunSpec {
 
   class UnderTest extends Controller {
     get("/abc") { _ => "" }
@@ -25,8 +24,8 @@ class PrintRoutesTest extends FunSpec {
     }.printRoutesTo(out)
 
     out.toString.trim shouldBe
-      """GET    /abc/servlet/abc                 -> com.springer.samatra.extras.routeprinting (PrintRoutesTest$UnderTest.scala:15)
-        |POST   /abc/servlet/cba                 -> com.springer.samatra.extras.routeprinting (PrintRoutesTest$UnderTest.scala:16)""".stripMargin
+      """GET    /abc/servlet/abc                 -> com.springer.samatra.extras.routeprinting (PrintRoutesTest$UnderTest.scala:14)
+        |POST   /abc/servlet/cba                 -> com.springer.samatra.extras.routeprinting (PrintRoutesTest$UnderTest.scala:15)""".stripMargin
   }
 
   it("prints routes with empty context route") {
@@ -38,7 +37,7 @@ class PrintRoutesTest extends FunSpec {
     }.printRoutesTo(out)
 
     out.toString.trim shouldBe
-      """GET    /servlet/abc                     -> com.springer.samatra.extras.routeprinting (PrintRoutesTest$UnderTest.scala:15)
-        |POST   /servlet/cba                     -> com.springer.samatra.extras.routeprinting (PrintRoutesTest$UnderTest.scala:16)""".stripMargin
+      """GET    /servlet/abc                     -> com.springer.samatra.extras.routeprinting (PrintRoutesTest$UnderTest.scala:14)
+        |POST   /servlet/cba                     -> com.springer.samatra.extras.routeprinting (PrintRoutesTest$UnderTest.scala:15)""".stripMargin
   }
 }

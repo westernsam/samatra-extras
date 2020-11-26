@@ -3,7 +3,6 @@ package com.springer.samatra.extras.core.asynchttp
 import java.io._
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.{CountDownLatch, TimeUnit, TimeoutException}
-
 import com.springer.samatra.extras.core.asynchttp.AsyncHttpHelpers.StatusCode
 import com.springer.samatra.extras.core.logging.Logger
 import io.netty.handler.codec.http.HttpHeaders
@@ -11,8 +10,8 @@ import org.asynchttpclient.AsyncHandler.State
 import org.asynchttpclient.AsyncHandler.State._
 import org.asynchttpclient.{AsyncHandler, _}
 
-import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext
+import scala.jdk.CollectionConverters.CollectionHasAsScala
 
 object ByteStream extends Logger {
   def apply(http: AsyncHttpClient, req: Request)(implicit ex: ExecutionContext): Either[Throwable, InputStream] = {
@@ -86,7 +85,7 @@ class ByteStream(out: PipedOutputStream, latch: CountDownLatch, statusCodeSetter
   }
 
   override def onHeadersReceived(headers: HttpHeaders): AsyncHandler.State = {
-    headers.entries().iterator().asScala.foreach(header => log.debug(s"${header.getKey}=${header.getValue}"))
+    headers.entries().asScala.foreach(header => log.debug(s"${header.getKey}=${header.getValue}"))
     state
   }
 }

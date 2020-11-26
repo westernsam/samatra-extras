@@ -8,7 +8,7 @@ import com.timgroup.statsd.StatsDClient
 class JvmMetricsCollectorStatsDService(jvmMetricsCollector: JvmMetricsCollector, statsDClient: StatsDClient, instance: String) extends Logger {
   private val scheduler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor
 
-  private def recordJvmStats() {
+  private def recordJvmStats() : Unit = {
     try {
       jvmMetricsCollector.jvmGauges.foreach {
         case (aspect: String, value: java.lang.Long) => statsDClient.gauge(qualify(aspect), value); log.debug(s"${qualify(aspect)}, $value")
@@ -24,7 +24,7 @@ class JvmMetricsCollectorStatsDService(jvmMetricsCollector: JvmMetricsCollector,
     }
   }
 
-  def initialise() {
+  def initialise() : Unit = {
     log.info("initialising jvm stats recording")
     scheduler.scheduleAtFixedRate(() => recordJvmStats(), 0, 10, TimeUnit.SECONDS)
   }

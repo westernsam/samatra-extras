@@ -1,2 +1,2 @@
-libraryDependencies += "org.typelevel" %% "cats-core" % "1.1.0"
-libraryDependencies += "org.typelevel" %% "cats-effect" % "1.0.0-RC2"
+libraryDependencies += "org.typelevel" %% "cats-core" % "2.2.0"
+libraryDependencies += "org.typelevel" %% "cats-effect" % "2.2.0"

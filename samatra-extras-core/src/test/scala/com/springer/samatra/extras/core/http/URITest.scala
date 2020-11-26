@@ -1,8 +1,9 @@
 package com.springer.samatra.extras.core.http
 
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
-class URITest extends FunSpec with Matchers {
+class URITest extends AnyFunSpec with Matchers {
   describe("URI") {
     it("handles with multiple query parameters") {
       val uri: URI = URI.parse("http://link.springer.com/search?query=dkasfjd&foo=bar")

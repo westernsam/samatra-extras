@@ -61,7 +61,7 @@ class RouteMetricsHandler(routesWithContext: RouteAndContext, statsdClient: Metr
   .replaceAll("\\/", "_")
   .replaceAll("[^a-zA-Z_\\-0-9]", "-")) extends BaseMetricsHandler(statsdClient, handler, ignore) {
 
-  def record(req: Request, response: ServletResponse) {
+  def record(req: Request, response: ServletResponse) : Unit = {
 
     val routeName: Option[(String, String)] = routesWithContext.routesWithContext.flatMap { case (c, r) =>
 

@@ -1,5 +1,7 @@
 package com.springer.samatra.extras.core.http
 
+import java.net.MalformedURLException
+
 case class URI(scheme: Option[String],
                authority: Option[String],
                path: String,
@@ -39,6 +41,7 @@ object URI {
   def parse(uri: String): URI = uri match {
     case regex(_, scheme, _, authority, path, _, queryString, _, fragment) =>
       URI(Option(scheme), Option(authority), path, Option(queryString), Option(fragment))
+    case _ => throw new MalformedURLException(s"Unable to parse $uri")
   }
 
   private lazy val regex = """^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?""".r

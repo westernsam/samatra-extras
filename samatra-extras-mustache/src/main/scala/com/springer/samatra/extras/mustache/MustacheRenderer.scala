@@ -1,18 +1,17 @@
 package com.springer.samatra.extras.mustache
 
+import com.samskivert.mustache.Mustache.{Compiler, Lambda}
+import com.samskivert.mustache.{Mustache, Template}
+import com.springer.samatra.extras.core.templating.{NonLeafFormattingError, TemplateRenderer, ViewRenderingError}
+
 import java.io.{FileReader, InputStream, InputStreamReader, Reader}
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.util
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Function
-
-import com.samskivert.mustache.Mustache.{Compiler, Lambda}
-import com.samskivert.mustache.{Mustache, Template}
-
-import scala.collection.JavaConverters._
-import java.util
-
-import com.springer.samatra.extras.core.templating.{NonLeafFormattingError, TemplateRenderer, ViewRenderingError}
+import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.MapHasAsJava
 
 class MustacheRenderer(globals: Map[String, Any], templateReader: String => Reader, enableCache: Boolean, extraLeafFormatters: PartialFunction[Any, Any]*) extends TemplateRenderer {
 
@@ -114,7 +113,7 @@ object MustacheRenderer {
   }
 
   private def toJava(obj: Any)(implicit extraLeafFormatters: PartialFunction[Any, Any]): Any = obj match {
-    case map: Map[String, Any]@unchecked => map.mapValues(toJava).asJava
+    case map: Map[String, Any]@unchecked => map.view.mapValues(toJava).toMap.asJava
     case iterable: Iterable[_]@unchecked => iterable.map(toJava).asJava
     case array: Array[_]@unchecked => array.map(toJava)
     case option: Option[Any]@unchecked => option.map(toJava).toList.asJava
@@ -128,11 +127,13 @@ object MustacheRenderer {
 
   def toJavaModel(caseClass: Product)(implicit extraLeafParsers: PartialFunction[Any, Any]): util.Map[String, Any] = {
 
-    def caseClassMap(caseClass: Product) = {
-      publicFields(caseClass).map { f =>
+    def caseClassMap(caseClass: Product): util.Map[String, Any] = {
+      val map: Map[String, Any] = publicFields(caseClass).map { f =>
         f.setAccessible(true)
         f.getName -> toJava(f.get(caseClass))
-      }.toMap.asJava
+      }.toMap
+
+      map.asJava
     }
 
     def publicFields(obj: Product) = obj.getClass.getDeclaredFields.filterNot(_.getName == "$outer")

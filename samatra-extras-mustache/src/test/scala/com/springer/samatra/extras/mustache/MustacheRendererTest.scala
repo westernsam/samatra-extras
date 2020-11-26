@@ -2,14 +2,12 @@ package com.springer.samatra.extras.mustache
 
 import java.time.format.DateTimeFormatter
 import java.time.{ZoneId, ZonedDateTime}
-
 import com.springer.samatra.extras.core.templating.{NonLeafFormattingError, ViewRenderingError}
-import org.scalatest.FunSpec
-import org.scalatest.Matchers._
-
+import org.scalatest.matchers.should.Matchers._
 import com.springer.samatra.extras.mustache.MustacheRenderer.zonedDateTimeRenderer
+import org.scalatest.funspec.AnyFunSpec
 
-class MustacheRendererTest extends FunSpec {
+class MustacheRendererTest extends AnyFunSpec {
 
   it("renders a String") {
     val renderer = new MustacheRenderer(Map.empty, new MustacheRenderer.ClasspathTemplateLoader("."), false)
