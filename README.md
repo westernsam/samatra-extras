@@ -29,7 +29,7 @@ Other samatra extra libraries exist which add further dependencies:
 - samatra-extras-routeprinting - route printing on start-up (integrates nicely with Intellij)
     - ```"org.javassist" % "javassist" % "3.22.0-GA"```
 - samatra-extras-websockets - 
-    - ```"com.github.westernsam.samatra" %% "samatra-websockets" % "v1.5.0"```
+    - ```"com.github.westernsam.samatra" %% "samatra-websockets" % "v1.0"```
     - ```"org.eclipse.jetty.websocket" % "javax-websocket-server-impl" % 9.4.10.v20180503```
 
 ## Supported platforms
@@ -40,7 +40,7 @@ Other samatra extra libraries exist which add further dependencies:
 - sbt: 
 ```
 resolvers += "jitpack" at "https://jitpack.io",
-libraryDependencies += "com.github.westernsam" %% "samatra-extras" % "v1.8.3"	
+libraryDependencies += "com.github.westernsam" %% "samatra-extras" % "v1.0"	
 ```
 
 You may also be interested in [samatra.g8](https://github.com/westernsam/samatra.g8) which is a giter8 / sbt template for generating new samatra projects.
