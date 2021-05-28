@@ -1,4 +1,4 @@
-samatra-extras [![](https://jitpack.io/v/westernsam/samatra-extras_2.12.svg)](https://jitpack.io/#westernsam/samatra-extras_2.12)
+samatra-extras [![](https://jitpack.io/v/westernsam/samatra-extras_2.12.svg)](https://jitpack.io/#westernsam/samatra-extras_2.13)
 ------------
 
 [Samatra](https://github.com/westernsam/samatra) with batteries included. Documentation [here](https://github.com/westernsam/samatra-extras/wiki)
