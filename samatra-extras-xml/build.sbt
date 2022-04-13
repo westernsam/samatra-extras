@@ -1,1 +1,1 @@
-libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "1.3.0"
+libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "2.1.0"

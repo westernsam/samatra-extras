@@ -1,4 +1,4 @@
-val jettyVersion = "9.4.35.v20201120"
+val jettyVersion = "9.4.46.v20220331"
 
 name := "samatra-extras"
 
@@ -23,8 +23,8 @@ lazy val commonSettings = Seq(
       "org.eclipse.jetty" % "jetty-util" % jettyVersion,
       "org.eclipse.jetty" % "jetty-jmx" % jettyVersion,
 
-      "org.slf4j" % "slf4j-api" % "1.7.30",
-      "org.asynchttpclient" % "async-http-client" % "2.12.1"
+      "org.slf4j" % "slf4j-api" % "1.7.36",
+      "org.asynchttpclient" % "async-http-client" % "2.12.3"
     )
 )
 
